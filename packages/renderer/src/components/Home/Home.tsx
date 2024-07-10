@@ -1,116 +1,221 @@
-// import {net} from 'electron';
+import {IpcRendererEvent} from 'electron';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {Box, Button} from 'decentraland-ui2';
-import {platform, downloadApp, openApp, isExplorerInstalled} from '#preload';
-import Create_IMG from '/@assets/create.svg';
-import VideoHomeLandscape from '/@assets/home-landscape.mp4';
-import {VideoWrapper, InfoMessage} from './Home.styles';
+import {Box, Button, LinearProgress, Typography} from 'decentraland-ui2';
+import {
+  platform,
+  downloadApp,
+  openApp,
+  isExplorerInstalled,
+  isExplorerUpdated,
+  downloadState,
+  installState,
+} from '#preload';
+import {
+  IPC_EVENT_DATA_TYPE,
+  IpcRendererEventDataError,
+  IpcRendererDownloadProgressStateEventData,
+  IpcRendererEventData,
+} from '#shared';
+import {APPS, AppState, PLATFORMS, GithubReleaseResponse} from './types';
+import {Landscape, LoadingBar} from './Home.styles';
 
-export enum APPS {
-  Explorer = 'unity-explorer',
-  Editor = 'unity-explorer',
-}
+import LANDSCAPE_IMG from '/@assets/landscape.png';
 
-export const PLATFORMS: Record<string, string> = {
-  darwin: 'Macos',
-  win32: 'Windows',
-  aix: 'aix',
-  freebsd: 'FreeBSD',
-  linux: 'linux',
-  openbsd: 'OpenBSD',
-  sunos: 'SunOS',
-  android: 'Android',
-};
-
-const DownloadClientButton = () => {
-  const appsLink = useRef<Map<APPS, string>>(new Map());
-  const [isInstalled, setIsInstalled] = useState<boolean | undefined>(undefined);
-  const [downloading, setDownloading] = useState(false);
-
-  useEffect(() => {
-    fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases/latest`).then(
-      async resp => {
-        if (resp.status === 200) {
-          const data = await resp.json();
-          const asset = data.assets.find((asset: Record<string, string>) =>
-            asset.name.includes(PLATFORMS[platform].toLowerCase()),
-          );
-          if (asset) {
-            console.log('Found the asset for your platform', {asset});
-            appsLink.current.set(APPS.Explorer, asset.browser_download_url);
-          } else {
-            console.log('No luck finding the asset for your platform');
-            console.log(data.assets);
-          }
-        } else {
-          console.error('Failed to fetch latest release', JSON.stringify(resp));
-        }
-      },
+async function getLatestRelease(): Promise<GithubReleaseResponse> {
+  try {
+    const resp = await fetch(
+      `https://api.github.com/repos/decentraland/${APPS.Explorer}/releases/latest`,
     );
-  }, []);
-
-  useEffect(() => {
-    isExplorerInstalled().then(setIsInstalled);
-  }, []);
-
-  console.log('explorer installed: ', isInstalled);
-
-  const handleClick = useCallback(() => {
-    if (isInstalled) {
-      openApp(APPS.Explorer);
-    } else {
-      if (appsLink.current?.get(APPS.Explorer)) {
-        downloadApp(appsLink.current.get(APPS.Explorer)!).then(() => {
-          setIsInstalled(true);
-        });
+    if (resp.status === 200) {
+      const data = await resp.json();
+      const asset = data.assets.find((asset: Record<string, string>) =>
+        asset.name.includes(PLATFORMS[platform].toLowerCase()),
+      );
+      if (asset) {
+        console.log('Found the asset for your platform', {asset});
+        return {
+          browser_download_url: asset.browser_download_url,
+          version: data.name,
+        };
+      } else {
+        throw new Error('No asset found for your platform');
       }
     }
-  }, [isInstalled]);
 
-  return (
-    <Button
-      variant={'contained'}
-      onClick={handleClick}
-    >
-      {isInstalled ? 'Jump In' : 'Download'}
-    </Button>
+    throw new Error('Failed to fetch latest release: ' + JSON.stringify(resp));
+  } catch (error) {
+    console.error('Failed to fetch latest release', error);
+    throw error;
+  }
+}
+
+export const Home: React.FC = React.memo(() => {
+  const initialized = useRef(false);
+  const openedApp = useRef(false);
+  const [state, setState] = useState<AppState | undefined>(undefined);
+  const [isUpdated, setIsUpdated] = useState(false);
+  const [downloadingProgress, setDownloadingProgress] = React.useState(0);
+  const [error, setError] = React.useState<string | undefined>(undefined);
+
+  const isUpdating = state === AppState.Installing && !isUpdated;
+
+  const handleDownloadState = useCallback(
+    (_event: IpcRendererEvent, eventData: IpcRendererEventData) => {
+      switch (eventData.type) {
+        case IPC_EVENT_DATA_TYPE.START:
+          setState(AppState.Downloading);
+          break;
+        case IPC_EVENT_DATA_TYPE.PROGRESS:
+          setDownloadingProgress((eventData as IpcRendererDownloadProgressStateEventData).progress);
+          break;
+        case IPC_EVENT_DATA_TYPE.COMPLETED:
+          setState(AppState.Downloaded);
+          break;
+        case IPC_EVENT_DATA_TYPE.CANCELLED:
+          setState(AppState.Cancelled);
+          break;
+        case IPC_EVENT_DATA_TYPE.ERROR:
+          setState(AppState.Error);
+          setError((eventData as IpcRendererEventDataError).error);
+          break;
+      }
+    },
+    [setDownloadingProgress, setError, setState],
   );
-};
 
-export const Home: React.FC = () => {
-  return (
-    <Box
-      display={'flex'}
-      justifyContent={'center'}
-    >
-      <VideoWrapper>
-        <video
-          autoPlay
-          muted
-          loop
-          src={VideoHomeLandscape}
-        />
-      </VideoWrapper>
-      <Box
-        display={'flex'}
-        justifyContent={'center'}
-      >
-        <Box
-          display={'flex'}
-          alignItems={'center'}
+  const handleInstallState = useCallback(
+    (_event: IpcRendererEvent, eventData: IpcRendererEventData) => {
+      switch (eventData.type) {
+        case IPC_EVENT_DATA_TYPE.START:
+          setState(AppState.Installing);
+          break;
+        case IPC_EVENT_DATA_TYPE.COMPLETED:
+          setState(AppState.Installed);
+          setIsUpdated(true);
+          break;
+        case IPC_EVENT_DATA_TYPE.ERROR:
+          setState(AppState.Error);
+          setError((eventData as IpcRendererEventDataError).error);
+          break;
+      }
+    },
+    [setError, setIsUpdated, setState],
+  );
+
+  const handleDownloadAndInstall = useCallback((url: string) => {
+    downloadApp(url);
+    downloadState(handleDownloadState);
+    installState(handleInstallState);
+  }, []);
+
+  useEffect(() => {
+    if (!initialized.current) {
+      initialized.current = true;
+      getLatestRelease()
+        .then(async ({browser_download_url: url, version}) => {
+          const isInstalled = await isExplorerInstalled();
+          if (!isInstalled) {
+            handleDownloadAndInstall(url);
+            return;
+          }
+          setState(AppState.Installed);
+
+          const _isUpdated = await isExplorerUpdated(version);
+          if (!_isUpdated) {
+            handleDownloadAndInstall(url);
+            return;
+          }
+          setIsUpdated(true);
+        })
+        .catch(error => {
+          console.error(error);
+          setError(error);
+        });
+    }
+  }, []);
+
+  if (isUpdated && openedApp.current === false) {
+    openedApp.current = true;
+    // openApp(APPS.Explorer);
+    // close();
+    // return;
+  }
+
+  const renderDownloadStep = useCallback(
+    () => (
+      <Box>
+        <Typography
+          variant="h4"
+          align="center"
         >
-          <img src={Create_IMG} />
-          <InfoMessage>
-            <h1>New Client Alpha</h1>
-            <p>
-              The alpha version of Decentraland's game-changing Desktop Client 2.0 was unveiled at
-              the Community Summit, featuring stunning visuals, seamless performance, and enhanced
-              immersion set to revolutionize the DCL experience.
-            </p>
-            <DownloadClientButton />
-          </InfoMessage>
+          Downloading {isUpdating ? 'Update' : null}
+        </Typography>
+        <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <LoadingBar
+            variant="determinate"
+            value={downloadingProgress}
+            sx={{mr: 1}}
+          />
+          <Typography variant="body1">{`${Math.round(downloadingProgress)}%`}</Typography>
         </Box>
       </Box>
+    ),
+    [downloadingProgress],
+  );
+
+  const renderInstallStep = useCallback(
+    () => (
+      <Box>
+        <Typography
+          variant="h4"
+          align="center"
+        >
+          Installing {isUpdating ? 'Update' : null}
+        </Typography>
+        <Box
+          paddingTop={'10px'}
+          paddingBottom={'10px'}
+        >
+          <LoadingBar />
+        </Box>
+      </Box>
+    ),
+    [],
+  );
+
+  const renderError = useCallback(
+    () => (
+      <Box>
+        <Typography
+          variant="h4"
+          align="center"
+        >
+          {error}
+        </Typography>
+      </Box>
+    ),
+    [error],
+  );
+
+  return (
+    <Box
+      display="flex"
+      alignItems={'center'}
+      justifyContent={'center'}
+      width={'100%'}
+    >
+      <Landscape>
+        <img src={LANDSCAPE_IMG} />
+      </Landscape>
+      {state === AppState.Downloading ? (
+        renderDownloadStep()
+      ) : state === AppState.Installing ? (
+        renderInstallStep()
+      ) : !!isUpdated ? (
+        <Typography variant="h4">Launching</Typography>
+      ) : !!error ? (
+        renderError()
+      ) : null}
     </Box>
   );
-};
+});
