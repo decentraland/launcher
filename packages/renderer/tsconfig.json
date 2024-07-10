@@ -13,6 +13,7 @@
     "baseUrl": ".",
     "paths": {
       "#preload": ["../preload/src/index"],
+      "#shared": ["../shared/src/index"],
       "/@/*": ["./src/*"],
       "/@assets/*": ["./assets/*"],
     },

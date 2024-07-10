@@ -1,32 +1,32 @@
-import {ipcRenderer} from 'electron';
+import {ipcRenderer, type IpcRendererEvent} from 'electron';
+import {IPC_EVENTS, IPC_HANDLERS, type IpcRendererEventData} from '#shared';
 
-export enum IPC_HANDLERS {
-  DOWNLOAD_APP = 'download-app',
-  IS_EXPLORER_INSTALLED = 'is-explorer-installed',
-  IS_EXPLORER_UPDATED = 'is-explorer-updated',
-  OPEN_APP = 'open-app',
+export function downloadApp(url: string) {
+  ipcRenderer.invoke(IPC_HANDLERS.DOWNLOAD_APP, url);
 }
 
-export async function downloadApp(url: string) {
-  const resp = await ipcRenderer.invoke(IPC_HANDLERS.DOWNLOAD_APP, url);
-  return JSON.parse(resp);
+export function downloadState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
+  return ipcRenderer.on(IPC_EVENTS.DOWNLOAD_STATE, cb);
 }
 
-export async function isExplorerInstalled() {
+export function installState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
+  return ipcRenderer.on(IPC_EVENTS.INSTALL_STATE, cb);
+}
+
+export async function isExplorerInstalled(): Promise<boolean> {
   const resp = await ipcRenderer.invoke(IPC_HANDLERS.IS_EXPLORER_INSTALLED);
-  return JSON.parse(resp);
+  return resp;
 }
 
-export async function isExplorerUpdated() {
-  const resp = await ipcRenderer.invoke(IPC_HANDLERS.IS_EXPLORER_UPDATED);
-  return JSON.parse(resp);
+export async function isExplorerUpdated(version: string): Promise<boolean> {
+  const resp = await ipcRenderer.invoke(IPC_HANDLERS.IS_EXPLORER_UPDATED, version);
+  return resp;
 }
 
-export async function openApp(app: string) {
+export function openApp(app: string) {
   ipcRenderer.invoke(IPC_HANDLERS.OPEN_APP, app);
-  ipcRenderer.on('openApp', (_event, resp) => {
-    if (resp) {
-      return JSON.parse(resp);
-    }
-  });
+}
+
+export function openAppState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
+  return ipcRenderer.on(IPC_EVENTS.OPEN_APP, cb);
 }

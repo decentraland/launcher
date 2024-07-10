@@ -34,7 +34,11 @@ const config = {
     emptyOutDir: true,
     reportCompressedSize: false,
   },
-
+  resolve: {
+    alias: {
+      '#shared': join(PACKAGE_ROOT, '../shared/src/index.ts'),
+    },
+  },
   plugins: [preload.vite()],
 };
 
