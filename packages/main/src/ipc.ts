@@ -1,12 +1,15 @@
 import {join} from 'path';
 import fs from 'node:fs';
 import {spawn} from 'child_process';
-import {BrowserWindow} from 'electron';
+import {app, BrowserWindow} from 'electron';
 import {CancelError, download} from 'electron-dl';
+import {IPC_EVENTS, IPC_EVENT_DATA_TYPE} from '#shared';
 import {getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated} from './helpers';
 
 export const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
+export const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
 export const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
+export const EXPLORER_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
 
 export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: string) {
   try {
@@ -14,66 +17,91 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
     if (!win) return;
 
     console.log('[Main Window] Downloading', url);
-    const downloadPath = join(EXPLORER_PATH, 'downloads');
     const versionPattern =
       /https:\/\/github.com\/decentraland\/.+\/releases\/download\/(v?\d+\.\d+\.\d+-?\w+)\/(\w+.zip)/;
-    const version = url.match(versionPattern)?.[1] ?? 'dev';
+    const version = url.match(versionPattern)?.[1];
+
+    if (!version) {
+      console.error('[Main Window] No version provided');
+      event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
+        type: IPC_EVENT_DATA_TYPE.ERROR,
+        error: 'No version provided',
+      });
+      return;
+    }
+
     const branchPath = join(EXPLORER_PATH, version);
+
     if (url) {
-      // const versionFile = fs.openSync(EXPLORER_VERSION_PATH, 'a');
       const versionData = fs.existsSync(EXPLORER_VERSION_PATH)
         ? JSON.parse(fs.readFileSync(EXPLORER_VERSION_PATH, 'utf8'))
         : null;
-      // fs.closeSync(versionFile);
+
       if (versionData && versionData.version === version) {
         console.log('[Main Window] This version is already installed');
-        event.sender.send('downloadState', {type: 'CANCELLED'});
+        event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {type: IPC_EVENT_DATA_TYPE.CANCELLED});
         return;
       }
+
       const resp = await download(win, url, {
-        directory: downloadPath,
-        onStarted: item => {
-          console.log('onStarted:', item);
-          event.sender.send('downloadState', {type: 'PROGRESS', progress: 0});
+        directory: EXPLORER_DOWNLOADS_PATH,
+        onStarted: _item => {
+          event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
+            type: IPC_EVENT_DATA_TYPE.START,
+            progress: 0,
+          });
         },
         onProgress: progress => {
-          console.log('onProgress:', progress);
-          event.sender.send('downloadState', {type: 'PROGRESS', progress: progress.percent * 100});
+          event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
+            type: IPC_EVENT_DATA_TYPE.PROGRESS,
+            progress: progress.percent * 100,
+          });
         },
         onCompleted: async file => {
-          console.log('onCompleted:', file);
-          await decompressFile(file.path, branchPath);
-          if (fs.existsSync(file.path)) {
-            fs.rmSync(file.path);
-          }
+          try {
+            event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {type: IPC_EVENT_DATA_TYPE.COMPLETED});
+            event.sender.send(IPC_EVENTS.INSTALL_STATE, {type: IPC_EVENT_DATA_TYPE.START});
 
-          if (getOSName() === 'mac') {
-            const execPath = `${branchPath}/Decentraland.app/Contents/MacOS/Explorer`;
-            console.log('execPath ' + execPath);
-            if (fs.existsSync(execPath)) {
-              fs.chmodSync(execPath, 0o755);
+            await decompressFile(file.path, branchPath);
+
+            if (fs.existsSync(file.path)) {
+              fs.rmSync(file.path);
             }
-          } else if (getOSName() === 'win32') {
-            // TODO: Implement windows installation
-            // const execPath = `${branchPath}/Decentraland`;
-            // console.log('execPath ' + execPath);
-            // if (fs.existsSync(execPath)) {
-            //   fs.chmodSync(execPath, 0o755);
-            // }
+
+            if (getOSName() === 'mac') {
+              const explorerBinPath = join(branchPath, EXPLORER_BIN_PATH);
+              if (fs.existsSync(explorerBinPath)) {
+                fs.chmodSync(explorerBinPath, 0o755);
+              }
+            } else if (getOSName() === 'win32') {
+              // TODO: Implement windows installation
+              // const execPath = `${branchPath}/Decentraland`;
+              // console.log('execPath ' + execPath);
+              // if (fs.existsSync(execPath)) {
+              //   fs.chmodSync(execPath, 0o755);
+              // }
+            }
+
+            const versionData = {
+              version: version,
+            };
+
+            fs.writeFileSync(EXPLORER_VERSION_PATH, JSON.stringify(versionData));
+
+            event.sender.send(IPC_EVENTS.INSTALL_STATE, {type: IPC_EVENT_DATA_TYPE.COMPLETED});
+          } catch (error) {
+            console.error('Failed to install app:', error);
+            event.sender.send(IPC_EVENTS.INSTALL_STATE, {type: IPC_EVENT_DATA_TYPE.ERROR, error});
           }
-
-          const versionData = {
-            version: version,
-          };
-
-          fs.writeFileSync(EXPLORER_VERSION_PATH, JSON.stringify(versionData));
-
-          event.sender.send('downloadState', {type: 'READY'});
         },
       });
       return JSON.stringify(resp);
     } else {
       console.error('[Main Window] No URL provided');
+      event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
+        type: IPC_EVENT_DATA_TYPE.ERROR,
+        error: 'No URL provided',
+      });
     }
   } catch (error) {
     if (error instanceof CancelError) {
@@ -81,6 +109,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
     } else {
       console.error('[Main Window] Error Downloading', url, error);
     }
+    event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {type: IPC_EVENT_DATA_TYPE.ERROR, error});
   }
 
   return null;
@@ -101,20 +130,29 @@ export function openApp(event: Electron.IpcMainInvokeEvent, _app: string) {
       : null;
 
     if (!!versionData && !!versionData.version) {
-      const execPath = join(
-        EXPLORER_PATH,
-        versionData.version,
-        '/Decentraland.app/Contents/MacOS/Explorer',
-      );
-      if (fs.existsSync(execPath)) {
-        spawn(execPath);
-        event.sender.send('openApp', {type: 'OPENED'});
+      const explorerBinPath = join(EXPLORER_PATH, versionData.version, EXPLORER_BIN_PATH);
+      if (fs.existsSync(explorerBinPath)) {
+        spawn(explorerBinPath)
+          .on('spawn', () => {
+            event.sender.send(IPC_EVENTS.OPEN_APP, {type: IPC_EVENT_DATA_TYPE.OPEN});
+          })
+          .on('close', () => {
+            event.sender.send(IPC_EVENTS.OPEN_APP, {type: IPC_EVENT_DATA_TYPE.CLOSE});
+            app.quit();
+          })
+          .on('error', error => {
+            console.error('Failed to open app:', error);
+            event.sender.send(IPC_EVENTS.OPEN_APP, {type: IPC_EVENT_DATA_TYPE.ERROR, error});
+          });
       }
     } else {
-      event.sender.send('openApp', {type: 'CANCELLED', message: 'Failed to open app'});
+      event.sender.send(IPC_EVENTS.OPEN_APP, {
+        type: IPC_EVENT_DATA_TYPE.ERROR,
+        error: 'The explorer is not installed.',
+      });
     }
   } catch (error) {
     console.error('Failed to open app:', error);
-    event.sender.send('openApp', {type: 'CANCELLED', error});
+    event.sender.send(IPC_EVENTS.OPEN_APP, {type: IPC_EVENT_DATA_TYPE.ERROR, error});
   }
 }

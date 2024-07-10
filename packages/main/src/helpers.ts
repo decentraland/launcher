@@ -1,11 +1,7 @@
 import {dirname, join} from 'path';
 import fs from 'fs';
-// import {pipeline} from 'node:stream';
-// import {promisify} from 'node:util';
 import {app} from 'electron';
 import JSZip from 'jszip';
-
-// const pipelineAsync = promisify(pipeline);
 
 export function getAppBasePath(): string {
   if (!process.platform || !['win32', 'darwin', 'linux'].includes(process.platform)) {

@@ -1,11 +1,20 @@
 import {app, BrowserWindow, ipcMain} from 'electron';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {IPC_HANDLERS} from '#shared';
 import {downloadApp, openApp, isExplorerInstalled, isExplorerUpdated} from './ipc';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({
     show: false, // Use the 'ready-to-show' event to show the instantiated BrowserWindow.
+    width: 1006, // 990+16 border
+    height: 849, // 790+59 border
+    minWidth: 1006,
+    minHeight: 849,
+    maxWidth: 1006,
+    maxHeight: 849,
+    maximizable: false,
+    fullscreenable: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -54,10 +63,10 @@ async function createWindow() {
     );
   }
 
-  ipcMain.handle('download-app', downloadApp);
-  ipcMain.handle('open-app', openApp);
-  ipcMain.handle('is-explorer-installed', isExplorerInstalled);
-  ipcMain.handle('is-explorer-updated', isExplorerUpdated);
+  ipcMain.handle(IPC_HANDLERS.DOWNLOAD_APP, downloadApp);
+  ipcMain.handle(IPC_HANDLERS.OPEN_APP, openApp);
+  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_INSTALLED, isExplorerInstalled);
+  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
 
   return browserWindow;
 }
