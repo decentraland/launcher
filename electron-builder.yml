@@ -12,11 +12,11 @@ win:
     - nsis
   icon: buildResources/icon.icns
   appId: Decentraland.Launcher
-  artifactName: Decentraland Launcher
+  artifactName: "Decentraland Launcher.nsis" #TBD
 
 mac:
   target: 
     - dmg
   icon: buildResources/icon.icns
   appId: com.Decentraland.Launcher
-  artifactName: Decentraland Launcher
+  artifactName: "Decentraland Launcher.dmg"
