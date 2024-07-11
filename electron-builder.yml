@@ -1,3 +1,5 @@
+productName: Decentraland Launcher
+
 directories:
   output: dist
   buildResources: buildResources
@@ -5,5 +7,16 @@ directories:
 files:
   - packages/**/dist/**
 
-linux:
-  target: deb
+win:
+  target: 
+    - nsis
+  icon: buildResources/icon.icns
+  appId: Decentraland.Launcher
+  artifactName: Decentraland Launcher
+
+mac:
+  target: 
+    - dmg
+  icon: buildResources/icon.icns
+  appId: com.Decentraland.Launcher
+  artifactName: Decentraland Launcher
