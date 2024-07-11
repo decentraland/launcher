@@ -9,13 +9,24 @@ files:
   - packages/**/dist/**
 
 win:
+  publisherName: "Decentraland Foundation"
+  appId: Decentraland.Launcher
+  icon: buildResources/icon.png
   target: 
     - nsis
-  icon: buildResources/icon.png
-  appId: Decentraland.Launcher
+  verifyUpdateCodeSignature: false
+  signAndEditExecutable: false
+  signingHashAlgorithms: 
+    - sha256
+  rfc3161TimeStampServer: "http://ts.ssl.com"
+  timeStampServer: "http://ts.ssl.com"
 
 mac:
+  appId: com.Decentraland.Launcher
+  icon: buildResources/icon.icns
   target: 
     - dmg
-  icon: buildResources/icon.icns
-  appId: com.Decentraland.Launcher
+  hardenedRuntime: true
+  entitlements: buildResources/entitlements.mac.plist,
+  extendInfo:
+    - NSMicrophoneUsageDescription: "Need microphone access to use voice chat in the application"
