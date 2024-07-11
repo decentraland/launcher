@@ -143,10 +143,10 @@ export function openApp(event: Electron.IpcMainInvokeEvent, _app: string) {
 
     if (!!versionData && !!versionData.version) {
       let explorerBinPath = '';
-      if (getOSName() === 'mac') {
+      if (getOSName() === PLATFORM.MAC) {
         log.debug('[Main Window] Mac OS Version');
         explorerBinPath = join(EXPLORER_PATH, versionData.version, EXPLORER_MAC_BIN_PATH);
-      } else if (getOSName() === 'win32') {
+      } else if (getOSName() === PLATFORM.WINDOWS) {
         log.debug('[Main Window] Windows OS Version');
         explorerBinPath = join(EXPLORER_PATH, versionData.version, EXPLORER_WIN_BIN_PATH);
       }
