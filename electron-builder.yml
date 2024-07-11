@@ -12,17 +12,10 @@ win:
   target: 
     - nsis
   icon: buildResources/icon.png
-  publisherName: "Decentraland Foundation"
   appId: Decentraland.Launcher
-  publish: 
-    provider: github
-    choices: onTag
 
 mac:
   target: 
     - dmg
   icon: buildResources/icon.icns
   appId: com.Decentraland.Launcher
-  publish: 
-    provider: github
-    choices: onTag
