@@ -1,4 +1,5 @@
 productName: Decentraland Launcher
+artifactName: "Decentraland Launcher.${ext}"
 
 directories:
   output: dist
@@ -10,13 +11,18 @@ files:
 win:
   target: 
     - nsis
-  icon: buildResources/icon.icns
+  icon: buildResources/icon.png
+  publisherName: "Decentraland Foundation"
   appId: Decentraland.Launcher
-  artifactName: "Decentraland Launcher.exe"
+  publish: 
+    provider: github
+    choices: onTag
 
 mac:
   target: 
     - dmg
   icon: buildResources/icon.icns
   appId: com.Decentraland.Launcher
-  artifactName: "Decentraland Launcher.dmg"
+  publish: 
+    provider: github
+    choices: onTag

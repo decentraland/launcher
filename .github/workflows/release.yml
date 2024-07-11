@@ -59,7 +59,7 @@ jobs:
         env:
           # Code Signing params
           # See https://www.electron.build/code-signing
-          # CSC_LINK: ''
+          CSC_LINK: 'file://$GITHUB_WORKSPACE/buildResources/self.pfx'
           # CSC_KEY_PASSWORD: ''
           # Publishing artifacts
           GH_TOKEN: ${{ secrets.github_token }} # GitHub token, automatically provided (No need to define this secret in the repo settings)
