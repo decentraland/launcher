@@ -12,7 +12,7 @@ win:
     - nsis
   icon: buildResources/icon.icns
   appId: Decentraland.Launcher
-  artifactName: "Decentraland Launcher.nsis" #TBD
+  artifactName: "Decentraland Launcher.exe"
 
 mac:
   target: 
