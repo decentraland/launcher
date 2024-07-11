@@ -134,13 +134,6 @@ export const Home: React.FC = React.memo(() => {
     }
   }, []);
 
-  if (isUpdated && openedApp.current === false) {
-    openedApp.current = true;
-    // openApp(APPS.Explorer);
-    // close();
-    // return;
-  }
-
   const renderDownloadStep = useCallback(
     () => (
       <Box>
@@ -183,6 +176,18 @@ export const Home: React.FC = React.memo(() => {
     [],
   );
 
+  const renderLaunchStep = useCallback(() => {
+    if (openedApp.current === false) {
+      openedApp.current = true;
+      setTimeout(() => {
+        openApp(APPS.Explorer);
+        close();
+      }, 1000);
+    }
+
+    return <Typography variant="h4">Launching</Typography>;
+  }, []);
+
   const renderError = useCallback(
     () => (
       <Box>
@@ -207,15 +212,15 @@ export const Home: React.FC = React.memo(() => {
       <Landscape>
         <img src={LANDSCAPE_IMG} />
       </Landscape>
-      {state === AppState.Downloading ? (
-        renderDownloadStep()
-      ) : state === AppState.Installing ? (
-        renderInstallStep()
-      ) : !!isUpdated ? (
-        <Typography variant="h4">Launching</Typography>
-      ) : !!error ? (
-        renderError()
-      ) : null}
+      {state === AppState.Downloading
+        ? renderDownloadStep()
+        : state === AppState.Installing
+        ? renderInstallStep()
+        : !!isUpdated
+        ? renderLaunchStep()
+        : !!error
+        ? renderError()
+        : null}
     </Box>
   );
 });

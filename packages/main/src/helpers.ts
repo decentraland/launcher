@@ -4,7 +4,7 @@ import {app} from 'electron';
 import JSZip from 'jszip';
 
 export function getAppBasePath(): string {
-  if (!process.platform || !['win32', 'darwin', 'linux'].includes(process.platform)) {
+  if (!process.platform || !['win32', 'darwin'].includes(process.platform)) {
     console.error(`Unsupported OS: ${process.platform}`);
     throw new Error('Unsupported OS');
   }
@@ -55,14 +55,20 @@ export async function decompressFile(sourcePath: string, destinationPath: string
   }
 }
 
+export enum PLATFORM {
+  MAC = 'mac',
+  LINUX = 'linux',
+  WINDOWS = 'windows',
+}
+
 export function getOSName(): string | null {
   switch (process.platform) {
     case 'darwin':
-      return 'mac';
+      return PLATFORM.MAC;
     case 'linux':
-      return 'linux';
+      return PLATFORM.LINUX;
     case 'win32':
-      return 'windows';
+      return PLATFORM.WINDOWS;
     default:
       return null;
   }

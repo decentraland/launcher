@@ -4,12 +4,20 @@ import {spawn} from 'child_process';
 import {app, BrowserWindow} from 'electron';
 import {CancelError, download} from 'electron-dl';
 import {IPC_EVENTS, IPC_EVENT_DATA_TYPE} from '#shared';
-import {getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated} from './helpers';
+import {
+  getAppBasePath,
+  decompressFile,
+  getOSName,
+  isAppInstalled,
+  isAppUpdated,
+  PLATFORM,
+} from './helpers';
 
 export const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
 export const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
 export const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
-export const EXPLORER_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
+export const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
+export const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
 
 export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: string) {
   try {
@@ -68,18 +76,13 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
               fs.rmSync(file.path);
             }
 
-            if (getOSName() === 'mac') {
-              const explorerBinPath = join(branchPath, EXPLORER_BIN_PATH);
+            if (getOSName() === PLATFORM.MAC) {
+              const explorerBinPath = join(branchPath, EXPLORER_MAC_BIN_PATH);
               if (fs.existsSync(explorerBinPath)) {
                 fs.chmodSync(explorerBinPath, 0o755);
               }
-            } else if (getOSName() === 'win32') {
-              // TODO: Implement windows installation
-              // const execPath = `${branchPath}/Decentraland`;
-              // console.log('execPath ' + execPath);
-              // if (fs.existsSync(execPath)) {
-              //   fs.chmodSync(execPath, 0o755);
-              // }
+            } else if (getOSName() === PLATFORM.WINDOWS) {
+              // TODO: Implement permissions for Windows
             }
 
             const versionData = {
@@ -130,14 +133,19 @@ export function openApp(event: Electron.IpcMainInvokeEvent, _app: string) {
       : null;
 
     if (!!versionData && !!versionData.version) {
-      const explorerBinPath = join(EXPLORER_PATH, versionData.version, EXPLORER_BIN_PATH);
+      let explorerBinPath = '';
+      if (getOSName() === 'mac') {
+        explorerBinPath = join(EXPLORER_PATH, versionData.version, EXPLORER_MAC_BIN_PATH);
+      } else if (getOSName() === 'win32') {
+        explorerBinPath = join(EXPLORER_PATH, versionData.version, EXPLORER_WIN_BIN_PATH);
+      }
+
       if (fs.existsSync(explorerBinPath)) {
         spawn(explorerBinPath)
           .on('spawn', () => {
             event.sender.send(IPC_EVENTS.OPEN_APP, {type: IPC_EVENT_DATA_TYPE.OPEN});
           })
           .on('close', () => {
-            event.sender.send(IPC_EVENTS.OPEN_APP, {type: IPC_EVENT_DATA_TYPE.CLOSE});
             app.quit();
           })
           .on('error', error => {
