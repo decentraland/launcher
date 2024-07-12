@@ -9,10 +9,19 @@ on:
         type: boolean
     secrets:
       MACOS_CSC_LINK:
-        description: 'A token passed from the caller workflow'
+        description: 'Certificate to sign dmg file'
         required: true
       MACOS_CSC_KEY_PASSWORD:
-        description: 'A token passed from the caller workflow'
+        description: 'Password to decrypt the certificate file'
+        required: true
+      MACOS_NOTARIZATION_APPLE_ID:
+        description: 'Apple ID used for notarization'
+        required: true
+      MACOS_NOTARIZATION_TEAM_ID:
+        description: 'Team ID used for notarization'
+        required: true
+      MACOS_NOTARIZATION_PWD:
+        description: 'Password used for notarization'
         required: true
 
 concurrency:
