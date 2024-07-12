@@ -11,7 +11,7 @@ files:
 win:
   publisherName: "Decentraland Foundation"
   appId: Decentraland.Launcher
-  icon: buildResources/icon.png
+  icon: buildResources/icon.ico
   target: 
     - nsis
   verifyUpdateCodeSignature: false

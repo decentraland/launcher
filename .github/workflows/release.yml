@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ macos-latest, windows-latest ]
+        os: [ macos-latest ] # TODO: Added windows-latest support
 
     runs-on: ${{ matrix.os }}
 
