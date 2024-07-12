@@ -93,16 +93,16 @@ jobs:
 
           # Send the notarization request to the Apple's Notarization service and wait for the result.
           echo "Notarize app"
-          xcrun notarytool submit "dist/Decentraland.dmg" --keychain-profile "notary-profile" --wait
+          xcrun notarytool submit "dist/Decentraland Launcher.dmg" --keychain-profile "notary-profile" --wait
 
           # Attach the staple to the executable, this allow the app to be validated by macOS
           # even when an internet connection is not available.
           echo "Attach staple"
-          xcrun stapler staple "dist/Decentraland.dmg"
+          xcrun stapler staple "dist/Decentraland Launcher.dmg"
 
           # Validate the staple attached to the executable.
           echo "Validate staple"
-          xcrun stapler validate "dist/Decentraland.dmg"
+          xcrun stapler validate "dist/Decentraland Launcher.dmg"
 
       - name: Sign Windows Build (exe)
         uses: sslcom/esigner-codesign@develop
