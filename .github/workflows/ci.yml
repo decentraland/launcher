@@ -29,6 +29,11 @@ on:
       - .gitignore
       - '.idea/**'
       - '.vscode/**'
+  workflow_call:
+    secrets:
+      MACOS_CSC_LINK:
+        description: 'A token passed from the caller workflow'
+        required: true
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -44,6 +49,7 @@ jobs:
       contents: write # Allows this job to create releases
     with:
       dry-run: ${{ github.event_name != 'push' || github.ref_name != 'main' }}
-      MACOS_CSC_LINK: ${{ secrets.MACOS_CSC_LINK }}
     needs: [ typechecking, tests ]
     uses: ./.github/workflows/release.yml
+    secrets:
+      MACOS_CSC_LINK: ${{ secrets.MACOS_CSC_LINK }}
