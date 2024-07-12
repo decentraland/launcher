@@ -34,6 +34,9 @@ on:
       MACOS_CSC_LINK:
         description: 'A token passed from the caller workflow'
         required: true
+      MACOS_CSC_KEY_PASSWORD:
+        description: 'A token passed from the caller workflow'
+        required: true
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -53,3 +56,4 @@ jobs:
     uses: ./.github/workflows/release.yml
     secrets:
       MACOS_CSC_LINK: ${{ secrets.MACOS_CSC_LINK }}
+      MACOS_CSC_KEY_PASSWORD: ${{ secrets.MACOS_CSC_KEY_PASSWORD }}
