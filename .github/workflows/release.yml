@@ -7,6 +7,10 @@ on:
         default: false
         required: false
         type: boolean
+    secrets:
+      MACOS_CSC_LINK:
+        description: 'A token passed from the caller workflow'
+        required: true
 
 concurrency:
   group: release-${{ github.ref }}
