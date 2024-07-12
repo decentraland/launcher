@@ -46,4 +46,7 @@ jobs:
       dry-run: ${{ github.event_name != 'push' || github.ref_name != 'main' }}
     needs: [ typechecking, tests ]
     uses: ./.github/workflows/release.yml
-
+    secrets:
+      MACOS_CSC_LINK:
+        description: 'A token passed from the caller workflow'
+        required: true
