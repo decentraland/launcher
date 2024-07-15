@@ -30,3 +30,7 @@ export function openApp(app: string) {
 export function openAppState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
   return ipcRenderer.on(IPC_EVENTS.OPEN_APP, cb);
 }
+
+export function minimize() {
+  ipcRenderer.invoke(IPC_HANDLERS.MINIMIZE_WINDOW);
+}

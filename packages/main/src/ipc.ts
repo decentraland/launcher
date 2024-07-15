@@ -21,6 +21,7 @@ export const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
 export const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
 export const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
 export const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
+export const EXPLORER_REGEDIT_PATH = 'regedit.bat';
 
 export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: string) {
   try {
@@ -86,10 +87,16 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
               }
             } else if (getOSName() === PLATFORM.WINDOWS) {
               // TODO: Implement permissions for Windows
-              const explorerBinPath = join(branchPath, EXPLORER_WIN_BIN_PATH);
-              if (fs.existsSync(explorerBinPath)) {
-                // TODO: Implement permissions for Windows
-              }
+              // const explorerBinPath = join(branchPath, EXPLORER_WIN_BIN_PATH);
+              // if (fs.existsSync(explorerBinPath)) {
+              //   spawn('cmd.exe', [
+              //     '/c',
+              //     join(EXPLORER_PATH, EXPLORER_REGEDIT_PATH),
+              //     explorerBinPath,
+              //   ]).on('error', error => {
+              //     log.error(error);
+              //   });
+              // }
             }
 
             const versionData = {
@@ -173,5 +180,16 @@ export function openApp(event: Electron.IpcMainInvokeEvent, _app: string) {
   } catch (error) {
     log.error('[Main Window] Failed to open app:', error);
     event.sender.send(IPC_EVENTS.OPEN_APP, {type: IPC_EVENT_DATA_TYPE.ERROR, error});
+  }
+}
+
+export function minimizeWindow(_event: Electron.IpcMainInvokeEvent) {
+  try {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return;
+
+    win.minimize();
+  } catch (error) {
+    log.error('[Main Window] Failed to minimize window:', error);
   }
 }

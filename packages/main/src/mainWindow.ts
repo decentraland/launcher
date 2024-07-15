@@ -2,7 +2,7 @@ import {app, BrowserWindow, ipcMain} from 'electron';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {IPC_HANDLERS} from '#shared';
-import {downloadApp, openApp, isExplorerInstalled, isExplorerUpdated} from './ipc';
+import {downloadApp, openApp, minimizeWindow, isExplorerInstalled, isExplorerUpdated} from './ipc';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({
@@ -67,6 +67,7 @@ async function createWindow() {
   ipcMain.handle(IPC_HANDLERS.OPEN_APP, openApp);
   ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_INSTALLED, isExplorerInstalled);
   ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
+  ipcMain.handle(IPC_HANDLERS.MINIMIZE_WINDOW, minimizeWindow);
 
   return browserWindow;
 }

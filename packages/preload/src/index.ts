@@ -10,6 +10,7 @@ import {
   installState,
   openApp,
   openAppState,
+  minimize,
   isExplorerInstalled,
   isExplorerUpdated,
 } from './ipc';
@@ -22,6 +23,7 @@ export {
   installState,
   openApp,
   openAppState,
+  minimize,
   isExplorerInstalled,
   isExplorerUpdated,
 };

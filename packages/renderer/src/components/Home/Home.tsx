@@ -9,6 +9,7 @@ import {
   isExplorerUpdated,
   downloadState,
   installState,
+  minimize,
 } from '#preload';
 import {
   IPC_EVENT_DATA_TYPE,
@@ -181,7 +182,7 @@ export const Home: React.FC = React.memo(() => {
       openedApp.current = true;
       setTimeout(() => {
         openApp(APPS.Explorer);
-        close();
+        minimize();
       }, 1000);
     }
 

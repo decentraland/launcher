@@ -3,6 +3,7 @@ export enum IPC_HANDLERS {
   IS_EXPLORER_INSTALLED = 'is-explorer-installed',
   IS_EXPLORER_UPDATED = 'is-explorer-updated',
   OPEN_APP = 'open-app',
+  MINIMIZE_WINDOW = 'minimize-window',
 }
 
 export enum IPC_EVENTS {
