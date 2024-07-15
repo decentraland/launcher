@@ -23,6 +23,18 @@ on:
       MACOS_NOTARIZATION_PWD:
         description: 'Password used for notarization'
         required: true
+      ES_USERNAME:
+        description: 'Username to sign exe file'
+        required: true
+      ES_PASSWORD:
+        description: 'Password to sign the exe file'
+        required: true
+      CREDENTIAL_ID:
+        description: 'Certificate to sign the exe file'
+        required: true
+      ES_TOTP_SECRET:
+        description: 'Password to decrypt the certificate file'
+        required: true
 
 concurrency:
   group: release-${{ github.ref }}

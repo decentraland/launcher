@@ -55,8 +55,14 @@ jobs:
     needs: [ typechecking, tests ]
     uses: ./.github/workflows/release.yml
     secrets:
+      # Secrets required to sign and notarize the app in MacOS
       MACOS_CSC_LINK: ${{ secrets.MACOS_CSC_LINK }}
       MACOS_CSC_KEY_PASSWORD: ${{ secrets.MACOS_CSC_KEY_PASSWORD }}
       MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.MACOS_NOTARIZATION_APPLE_ID }}
       MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.MACOS_NOTARIZATION_TEAM_ID }}
       MACOS_NOTARIZATION_PWD: ${{ secrets.MACOS_NOTARIZATION_PWD }}
+      # Secrets required to sign and notarize the app in Windows
+      ES_USERNAME: ${{ secrets.ES_USERNAME }}
+      ES_PASSWORD: ${{ secrets.ES_PASSWORD }}
+      CREDENTIAL_ID: ${{ secrets.CREDENTIAL_ID }}
+      ES_TOTP_SECRET: ${{ secrets.ES_TOTP_SECRET }}
