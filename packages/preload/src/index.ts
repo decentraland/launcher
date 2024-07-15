@@ -13,6 +13,7 @@ import {
   minimize,
   isExplorerInstalled,
   isExplorerUpdated,
+  getOSName,
 } from './ipc';
 export {
   sha256sum,
@@ -26,4 +27,5 @@ export {
   minimize,
   isExplorerInstalled,
   isExplorerUpdated,
+  getOSName,
 };

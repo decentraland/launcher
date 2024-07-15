@@ -2,7 +2,6 @@ import {IpcRendererEvent} from 'electron';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {Box, Button, LinearProgress, Typography} from 'decentraland-ui2';
 import {
-  platform,
   downloadApp,
   openApp,
   isExplorerInstalled,
@@ -10,6 +9,7 @@ import {
   downloadState,
   installState,
   minimize,
+  getOSName,
 } from '#preload';
 import {
   IPC_EVENT_DATA_TYPE,
@@ -17,7 +17,7 @@ import {
   IpcRendererDownloadProgressStateEventData,
   IpcRendererEventData,
 } from '#shared';
-import {APPS, AppState, PLATFORMS, GithubReleaseResponse} from './types';
+import {APPS, AppState, GithubReleaseResponse} from './types';
 import {Landscape, LoadingBar} from './Home.styles';
 
 import LANDSCAPE_IMG from '/@assets/landscape.png';
@@ -29,8 +29,9 @@ async function getLatestRelease(): Promise<GithubReleaseResponse> {
     );
     if (resp.status === 200) {
       const data = await resp.json();
+      const os = await getOSName();
       const asset = data.assets.find((asset: Record<string, string>) =>
-        asset.name.includes(PLATFORMS[platform].toLowerCase()),
+        asset.name.includes(os.toLowerCase()),
       );
       if (asset) {
         console.log('Found the asset for your platform', {asset});

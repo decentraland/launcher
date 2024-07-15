@@ -34,3 +34,8 @@ export function openAppState(cb: (event: IpcRendererEvent, state: IpcRendererEve
 export function minimize() {
   ipcRenderer.invoke(IPC_HANDLERS.MINIMIZE_WINDOW);
 }
+
+export async function getOSName(): Promise<string> {
+  const resp = await ipcRenderer.invoke(IPC_HANDLERS.GET_OS_NAME);
+  return resp;
+}
