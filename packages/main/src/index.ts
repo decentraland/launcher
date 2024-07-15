@@ -1,8 +1,7 @@
 import {app} from 'electron';
-import './security-restrictions';
-import {restoreOrCreateWindow} from '/@/mainWindow';
-import {platform} from 'node:process';
 import updater from 'electron-updater';
+import {restoreOrCreateWindow} from '/@/mainWindow';
+import './security-restrictions';
 
 /**
  * Prevent electron from running multiple instances.
@@ -23,9 +22,7 @@ app.disableHardwareAcceleration();
  * Shout down background process if all windows was closed
  */
 app.on('window-all-closed', () => {
-  if (platform !== 'darwin') {
-    app.quit();
-  }
+  app.quit();
 });
 
 /**
