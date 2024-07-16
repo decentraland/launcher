@@ -7,7 +7,7 @@ export enum PLATFORM {
   MAC = 'mac',
   LINUX = 'linux',
   WINDOWS = 'windows',
-  UNSUPPORTED = 'unsupported'
+  UNSUPPORTED = 'unsupported',
 }
 
 export function getOSName(): PLATFORM {

@@ -1,9 +1,9 @@
-import {app, BrowserWindow, ipcMain} from 'electron';
-import {join} from 'node:path';
-import {fileURLToPath} from 'node:url';
-import {IPC_HANDLERS} from '#shared';
-import {downloadApp, openApp, minimizeWindow, isExplorerInstalled, isExplorerUpdated} from './ipc';
-import {getOSName} from './helpers';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { app, BrowserWindow, ipcMain } from 'electron';
+import { IPC_HANDLERS } from '#shared';
+import { downloadApp, openApp, minimizeWindow, isExplorerInstalled, isExplorerUpdated } from './ipc';
+import { getOSName } from './helpers';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({
@@ -59,9 +59,7 @@ async function createWindow() {
      * @see https://github.com/nodejs/node/issues/12682
      * @see https://github.com/electron/electron/issues/6869
      */
-    await browserWindow.loadFile(
-      fileURLToPath(new URL('./../../renderer/dist/index.html', import.meta.url)),
-    );
+    await browserWindow.loadFile(fileURLToPath(new URL('./../../renderer/dist/index.html', import.meta.url)));
   }
 
   ipcMain.handle(IPC_HANDLERS.DOWNLOAD_APP, downloadApp);

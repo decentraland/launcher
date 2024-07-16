@@ -1,6 +1,6 @@
-import {app} from 'electron';
-import updater from 'electron-updater';
-import {restoreOrCreateWindow} from '/@/mainWindow';
+import { app } from 'electron';
+import { autoUpdater } from 'electron-updater';
+import { restoreOrCreateWindow } from '/@/mainWindow';
 import './security-restrictions';
 
 /**
@@ -39,28 +39,6 @@ app
   .catch(e => console.error('Failed create window:', e));
 
 /**
- * Install Vue.js or any other extension in development mode only.
- * Note: You must install `electron-devtools-installer` manually
- */
-// if (import.meta.env.DEV) {
-//   app
-//     .whenReady()
-//     .then(() => import('electron-devtools-installer'))
-//     .then(module => {
-//       const {default: installExtension, VUEJS_DEVTOOLS} =
-//         //@ts-expect-error Hotfix for https://github.com/cawa-93/vite-electron-builder/issues/915
-//         typeof module.default === 'function' ? module : (module.default as typeof module);
-//
-//       return installExtension(VUEJS_DEVTOOLS, {
-//         loadExtensionOptions: {
-//           allowFileAccess: true,
-//         },
-//       });
-//     })
-//     .catch(e => console.error('Failed install extension:', e));
-// }
-
-/**
  * Check for app updates, install it in background and notify user that new version was installed.
  * No reason run this in non-production build.
  * @see https://www.electron.build/auto-update.html#quick-setup-guide
@@ -72,6 +50,6 @@ app
 if (import.meta.env.PROD) {
   app
     .whenReady()
-    .then(() => updater.autoUpdater.checkForUpdatesAndNotify())
+    .then(() => autoUpdater.checkForUpdatesAndNotify())
     .catch(e => console.error('Failed check and install updates:', e));
 }

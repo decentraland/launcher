@@ -2,7 +2,7 @@
 module.exports = {
   env: {
     browser: true,
-    node: false
+    node: false,
   },
   extends: ['@dcl/eslint-config/dapps'],
   overrides: [
@@ -14,25 +14,25 @@ module.exports = {
           'error',
           {
             selector: 'function',
-            format: ['PascalCase', 'camelCase']
-          }
-        ]
-      }
-    }
+            format: ['PascalCase', 'camelCase'],
+          },
+        ],
+      },
+    },
   ],
   parserOptions: {
     parser: '@typescript-eslint/parser',
     sourceType: 'module',
     project: ['tsconfig.json'],
-    tsconfigRootDir: __dirname
+    tsconfigRootDir: __dirname,
   },
   settings: {
     'import/resolver': {
       typescript: {
         alwaysTryTypes: true,
-        project: __dirname + '/tsconfig.json'
-      }
-    }
+        project: __dirname + '/tsconfig.json',
+      },
+    },
   },
-  ignorePatterns: ['dist']
-}
+  ignorePatterns: ['dist'],
+};

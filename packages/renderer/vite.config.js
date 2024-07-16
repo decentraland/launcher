@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-env node */
 
-import { join } from 'node:path'
-import react from '@vitejs/plugin-react'
-import { renderer } from 'unplugin-auto-expose'
-import { chrome } from '../../.electron-vendors.cache.json'
+import { join } from 'node:path';
+import react from '@vitejs/plugin-react';
+import { renderer } from 'unplugin-auto-expose';
+import { chrome } from '../../.electron-vendors.cache.json';
 
-const PACKAGE_ROOT = __dirname
-const PROJECT_ROOT = join(PACKAGE_ROOT, '../..')
-console.log(PACKAGE_ROOT)
+const PACKAGE_ROOT = __dirname;
+const PROJECT_ROOT = join(PACKAGE_ROOT, '../..');
+console.log(PACKAGE_ROOT);
 /**
  * @type {import('vite').UserConfig}
  * @see https://vitejs.dev/config/
@@ -21,14 +21,14 @@ const config = {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
       '/@assets/': join(PACKAGE_ROOT, 'assets') + '/',
-      '#shared': join(PACKAGE_ROOT, '../shared/src/index.ts')
-    }
+      '#shared': join(PACKAGE_ROOT, '../shared/src/index.ts'),
+    },
   },
   base: '',
   server: {
     fs: {
-      strict: true
-    }
+      strict: true,
+    },
   },
   build: {
     sourcemap: true,
@@ -36,20 +36,20 @@ const config = {
     outDir: 'dist',
     assetsDir: '.',
     rollupOptions: {
-      input: join(PACKAGE_ROOT, 'index.html')
+      input: join(PACKAGE_ROOT, 'index.html'),
     },
     emptyOutDir: true,
-    reportCompressedSize: false
+    reportCompressedSize: false,
   },
   test: {
-    environment: 'happy-dom'
+    environment: 'happy-dom',
   },
   plugins: [
     react(),
     renderer.vite({
-      preloadEntry: join(PACKAGE_ROOT, '../preload/src/index.ts')
-    })
-  ]
-}
+      preloadEntry: join(PACKAGE_ROOT, '../preload/src/index.ts'),
+    }),
+  ],
+};
 
-export default config
+export default config;

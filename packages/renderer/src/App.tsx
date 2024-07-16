@@ -1,8 +1,8 @@
-import React from 'react'
-import { ThemeProvider } from '@mui/material/styles'
-import { Container } from 'decentraland-ui2'
-import { dark } from 'decentraland-ui2/dist/theme'
-import { Home } from '/@/components/Home/Home'
+import React from 'react';
+import { ThemeProvider } from '@mui/material/styles';
+import { Container } from 'decentraland-ui2';
+import { dark } from 'decentraland-ui2/dist/theme';
+import { Home } from '/@/components/Home/Home';
 
 export const App: React.FC = () => {
   return (
@@ -13,5 +13,5 @@ export const App: React.FC = () => {
         </Container>
       </ThemeProvider>
     </React.StrictMode>
-  )
-}
+  );
+};

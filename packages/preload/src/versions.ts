@@ -1,1 +1,1 @@
-export {versions, platform} from 'node:process';
+export { versions, platform } from 'node:process';
