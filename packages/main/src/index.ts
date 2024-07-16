@@ -1,5 +1,5 @@
 import { app } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import updater from 'electron-updater';
 import { restoreOrCreateWindow } from '/@/mainWindow';
 import './security-restrictions';
 
@@ -50,6 +50,6 @@ app
 if (import.meta.env.PROD) {
   app
     .whenReady()
-    .then(() => autoUpdater.checkForUpdatesAndNotify())
+    .then(() => updater.autoUpdater.checkForUpdatesAndNotify())
     .catch(e => console.error('Failed check and install updates:', e));
 }
