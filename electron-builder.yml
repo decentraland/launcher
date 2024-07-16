@@ -1,5 +1,5 @@
 productName: Decentraland Launcher
-artifactName: "Decentraland Launcher.${ext}"
+artifactName: "Decentraland Launcher-${arch}.${ext}"
 
 directories:
   output: dist
