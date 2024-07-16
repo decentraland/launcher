@@ -2,8 +2,8 @@
  * @module preload
  */
 
-import {sha256sum} from './nodeCrypto';
-import {versions, platform} from './versions';
+import { sha256sum } from './nodeCrypto';
+import { versions, platform } from './versions';
 import {
   downloadApp,
   downloadState,

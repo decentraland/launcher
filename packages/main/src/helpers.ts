@@ -1,13 +1,13 @@
-import {dirname, join} from 'path';
+import { dirname, join } from 'path';
 import fs from 'fs';
-import {app} from 'electron';
+import { app } from 'electron';
 import JSZip from 'jszip';
 
 export enum PLATFORM {
   MAC = 'mac',
   LINUX = 'linux',
   WINDOWS = 'windows',
-  UNSUPPORTED = 'unsupported',
+  UNSUPPORTED = 'unsupported'
 }
 
 export function getOSName(): PLATFORM {
@@ -39,7 +39,7 @@ export function getAppBasePath(): string {
 
 function ensureDirSync(dirPath: string) {
   if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, {recursive: true});
+    fs.mkdirSync(dirPath, { recursive: true });
   }
 }
 
