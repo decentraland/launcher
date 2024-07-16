@@ -7,7 +7,7 @@ module.exports = {
   extends: ['@dcl/eslint-config/dapps'],
   overrides: [
     {
-      files: ['*.ts', '*.tsx', '*.cjs'],
+      files: ['*.ts', '*.tsx', '*.cjs', '*.js'],
       rules: {
         'import/default': 'off',
         '@typescript-eslint/naming-convention': [
@@ -15,6 +15,13 @@ module.exports = {
           {
             selector: 'function',
             format: ['PascalCase', 'camelCase'],
+          },
+        ],
+        'prettier/prettier': [
+          'error',
+          {
+            semi: true,
+            trailingComma: 'all',
           },
         ],
       },
