@@ -1,10 +1,10 @@
 export enum APPS {
-  Explorer = 'unity-explorer',
+  Explorer = 'unity-explorer'
 }
 
 export interface GithubReleaseResponse {
-  browser_download_url: string;
-  version: string;
+  browser_download_url: string
+  version: string
 }
 
 export enum AppState {
@@ -13,5 +13,5 @@ export enum AppState {
   Installing,
   Installed,
   Cancelled,
-  Error,
+  Error
 }
