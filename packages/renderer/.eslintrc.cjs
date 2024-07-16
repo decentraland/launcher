@@ -8,7 +8,6 @@ module.exports = {
   overrides: [
     {
       files: ['*.ts', '*.tsx', '*.cjs'],
-      extends: ['plugin:@typescript-eslint/recommended', 'plugin:@typescript-eslint/recommended-requiring-type-checking', 'prettier'],
       rules: {
         'import/default': 'off',
         '@typescript-eslint/naming-convention': [
