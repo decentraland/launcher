@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-env node */
 
-import {chrome} from '../../.electron-vendors.cache.json';
+import { join } from 'node:path';
 import react from '@vitejs/plugin-react';
-import {renderer} from 'unplugin-auto-expose';
-import {join} from 'node:path';
+import { renderer } from 'unplugin-auto-expose';
+import { chrome } from '../../.electron-vendors.cache.json';
 
 const PACKAGE_ROOT = __dirname;
 const PROJECT_ROOT = join(PACKAGE_ROOT, '../..');
-console.log(PACKAGE_ROOT)
+console.log(PACKAGE_ROOT);
 /**
  * @type {import('vite').UserConfig}
  * @see https://vitejs.dev/config/

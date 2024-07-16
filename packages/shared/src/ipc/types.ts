@@ -4,6 +4,7 @@ export enum IPC_HANDLERS {
   IS_EXPLORER_UPDATED = 'is-explorer-updated',
   OPEN_APP = 'open-app',
   MINIMIZE_WINDOW = 'minimize-window',
+  GET_OS_NAME = 'get-os-name',
 }
 
 export enum IPC_EVENTS {

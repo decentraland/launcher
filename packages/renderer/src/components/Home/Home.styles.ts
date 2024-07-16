@@ -1,4 +1,4 @@
-import {styled, LinearProgress} from 'decentraland-ui2';
+import { styled, LinearProgress } from 'decentraland-ui2';
 
 export const Landscape = styled('div')(_props => ({
   position: 'absolute',

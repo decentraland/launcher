@@ -1,5 +1,5 @@
-import {ipcRenderer, type IpcRendererEvent} from 'electron';
-import {IPC_EVENTS, IPC_HANDLERS, type IpcRendererEventData} from '#shared';
+import { ipcRenderer, type IpcRendererEvent } from 'electron';
+import { IPC_EVENTS, IPC_HANDLERS, type IpcRendererEventData } from '#shared';
 
 export function downloadApp(url: string) {
   ipcRenderer.invoke(IPC_HANDLERS.DOWNLOAD_APP, url);
@@ -23,8 +23,8 @@ export async function isExplorerUpdated(version: string): Promise<boolean> {
   return resp;
 }
 
-export function openApp(app: string) {
-  ipcRenderer.invoke(IPC_HANDLERS.OPEN_APP, app);
+export function openApp(app: string, version?: string) {
+  ipcRenderer.invoke(IPC_HANDLERS.OPEN_APP, app, version);
 }
 
 export function openAppState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
@@ -33,4 +33,9 @@ export function openAppState(cb: (event: IpcRendererEvent, state: IpcRendererEve
 
 export function minimize() {
   ipcRenderer.invoke(IPC_HANDLERS.MINIMIZE_WINDOW);
+}
+
+export async function getOSName(): Promise<string> {
+  const resp = await ipcRenderer.invoke(IPC_HANDLERS.GET_OS_NAME);
+  return resp;
 }

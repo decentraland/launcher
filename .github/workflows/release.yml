@@ -55,7 +55,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ macos-latest, windows-latest ]
+        # use macos-14-large to build the app for intel based macs 
+        os: [ macos-latest, macos-14-large, windows-latest ]
 
     runs-on: ${{ matrix.os }}
 

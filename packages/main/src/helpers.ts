@@ -1,11 +1,32 @@
-import {dirname, join} from 'path';
+import { dirname, join } from 'path';
 import fs from 'fs';
-import {app} from 'electron';
+import { app } from 'electron';
 import JSZip from 'jszip';
 
+export enum PLATFORM {
+  MAC = 'mac',
+  LINUX = 'linux',
+  WINDOWS = 'windows',
+  UNSUPPORTED = 'unsupported',
+}
+
+export function getOSName(): PLATFORM {
+  switch (process.platform) {
+    case 'darwin':
+      return PLATFORM.MAC;
+    case 'linux':
+      return PLATFORM.LINUX;
+    case 'win32':
+      return PLATFORM.WINDOWS;
+    default:
+      return PLATFORM.UNSUPPORTED;
+  }
+}
+
 export function getAppBasePath(): string {
-  if (!process.platform || !['win32', 'darwin'].includes(process.platform)) {
-    console.error(`Unsupported OS: ${process.platform}`);
+  const osName = getOSName();
+  if (![PLATFORM.MAC, PLATFORM.WINDOWS].includes(osName)) {
+    console.error(`Unsupported OS: ${osName}`);
     throw new Error('Unsupported OS');
   }
 
@@ -18,7 +39,7 @@ export function getAppBasePath(): string {
 
 function ensureDirSync(dirPath: string) {
   if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, {recursive: true});
+    fs.mkdirSync(dirPath, { recursive: true });
   }
 }
 
@@ -52,25 +73,6 @@ export async function decompressFile(sourcePath: string, destinationPath: string
     console.log('File decompressed successfully');
   } catch (error) {
     console.error('Failed to decompress file:', error);
-  }
-}
-
-export enum PLATFORM {
-  MAC = 'mac',
-  LINUX = 'linux',
-  WINDOWS = 'windows',
-}
-
-export function getOSName(): string | null {
-  switch (process.platform) {
-    case 'darwin':
-      return PLATFORM.MAC;
-    case 'linux':
-      return PLATFORM.LINUX;
-    case 'win32':
-      return PLATFORM.WINDOWS;
-    default:
-      return null;
   }
 }
 
