@@ -1,5 +1,5 @@
 productName: Decentraland Launcher
-artifactName: "Decentraland Launcher-${arch}.${ext}"
+artifactName: "Decentraland Launcher-${os}-${arch}.${ext}"
 
 directories:
   output: dist
@@ -30,3 +30,10 @@ mac:
   entitlements: buildResources/entitlements.mac.plist
   extendInfo:
     - NSMicrophoneUsageDescription: "Need microphone access to use voice chat in the application"
+
+dmg:
+  title: Decentraland Launcher Installer
+  background: buildResources/background.png
+  window:
+    width: 510
+    height: 410
