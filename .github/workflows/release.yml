@@ -124,7 +124,7 @@ jobs:
 
       - name: Sign Windows Build (exe)
         uses: sslcom/esigner-codesign@develop
-        if: ${{github.ref == 'refs/heads/main' && matrix.config.os == 'windows-latest' && !inputs.dry-run}}
+        if: ${{github.ref == 'refs/heads/main' && matrix.config.os == 'windows-latest'}}
         with:
           command: sign
           username: ${{ secrets.ES_USERNAME }}
