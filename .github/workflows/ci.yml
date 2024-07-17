@@ -64,5 +64,5 @@ jobs:
       # Secrets required to sign and notarize the app in Windows
       ES_USERNAME: ${{ secrets.ES_USERNAME }}
       ES_PASSWORD: ${{ secrets.ES_PASSWORD }}
-      CREDENTIAL_ID: ${{ secrets.CREDENTIAL_ID }}
+      WINDOWS_CREDENTIAL_ID_SIGNER: ${{ secrets.WINDOWS_CREDENTIAL_ID_SIGNER }}
       ES_TOTP_SECRET: ${{ secrets.ES_TOTP_SECRET }}
