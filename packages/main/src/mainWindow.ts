@@ -24,6 +24,7 @@ async function createWindow() {
       preload: join(app.getAppPath(), 'packages/preload/dist/index.mjs'),
     },
   });
+  browserWindow.setMenuBarVisibility(false);
 
   /**
    * If the 'show' property of the BrowserWindow's constructor is omitted from the initialization options,

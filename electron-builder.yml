@@ -1,5 +1,5 @@
 productName: Decentraland Launcher
-artifactName: "Decentraland Launcher-${arch}.${ext}"
+artifactName: "Decentraland Launcher-${os}-${arch}.${ext}"
 
 directories:
   output: dist
@@ -13,7 +13,9 @@ win:
   appId: Decentraland.Launcher
   icon: buildResources/icon.ico
   target: 
-    - nsis
+    - target: nsis
+      arch:
+        - x64
   verifyUpdateCodeSignature: false
   signAndEditExecutable: false
   signingHashAlgorithms: 
@@ -21,12 +23,30 @@ win:
   rfc3161TimeStampServer: "http://ts.ssl.com"
   timeStampServer: "http://ts.ssl.com"
 
+nsis:
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  oneClick: false
+  perMachine: true
+  include: buildResources/scripts/windowsInstaller.nsh
+
 mac:
   appId: com.Decentraland.Launcher
   icon: buildResources/icon.icns
   target: 
-    - dmg
+    - target: default
+      arch:
+        - x64
+        - arm64
   hardenedRuntime: true
   entitlements: buildResources/entitlements.mac.plist
   extendInfo:
     - NSMicrophoneUsageDescription: "Need microphone access to use voice chat in the application"
+
+dmg:
+  title: Decentraland Launcher Installer
+  background: buildResources/background.png
+  window:
+    width: 510
+    height: 410

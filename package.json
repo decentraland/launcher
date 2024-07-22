@@ -3,6 +3,9 @@
   "description": "Launcher to manage Decentraland's apps installation",
   "repository": "https://github.com/decentraland/launcher",
   "version": "0.0.0-dev",
+  "author": "Decentraland",
+  "license": "MIT",
+  "homepage": "https://github.com/decentraland/launcher#readme",
   "type": "module",
   "main": "packages/main/dist/index.js",
   "scripts": {
