@@ -58,8 +58,8 @@ jobs:
         config:
           - os: macos-latest-large
             arch: x64
-          - os: macos-latest
-            arch: arm64
+          # - os: macos-latest
+          #   arch: arm64
           - os: windows-latest
             arch: x64
 
@@ -89,7 +89,7 @@ jobs:
           shell: 'bash'
           # Due to this issue https://github.com/electron-userland/electron-builder/issues/6411 the build with npx when rebuilding native dependencies hangs forever
           # see https://github.com/cawa-93/vite-electron-builder/pull/953
-          command: ./node_modules/.bin/electron-builder --config electron-builder.yml --publish ${{ inputs.dry-run && 'never' || 'always' }} --${{ matrix.config.arch }}
+          command: ./node_modules/.bin/electron-builder --config electron-builder.yml --publish ${{ inputs.dry-run && 'never' || 'always' }}
         env:
           # Code Signing params
           # See https://www.electron.build/code-signing
@@ -111,16 +111,19 @@ jobs:
 
           # Send the notarization request to the Apple's Notarization service and wait for the result.
           echo "Notarize app"
-          xcrun notarytool submit "dist/Decentraland Launcher-${{ matrix.config.os }}-${{ matrix.config.arch }}.dmg" --keychain-profile "notary-profile" --wait
+          xcrun notarytool submit "dist/Decentraland Launcher-${{ matrix.config.os }}-x64.dmg" --keychain-profile "notary-profile" --wait
+          xcrun notarytool submit "dist/Decentraland Launcher-${{ matrix.config.os }}-arm64.dmg" --keychain-profile "notary-profile" --wait
 
           # Attach the staple to the executable, this allow the app to be validated by macOS
           # even when an internet connection is not available.
           echo "Attach staple"
-          xcrun stapler staple "dist/Decentraland Launcher-${{ matrix.config.os }}-${{ matrix.config.arch }}.dmg"
+          xcrun stapler staple "dist/Decentraland Launcher-${{ matrix.config.os }}-x64.dmg"
+          xcrun stapler staple "dist/Decentraland Launcher-${{ matrix.config.os }}-arm64.dmg"
 
           # Validate the staple attached to the executable.
           echo "Validate staple"
-          xcrun stapler validate "dist/Decentraland Launcher-${{ matrix.config.os }}-${{ matrix.config.arch }}.dmg"
+          xcrun stapler validate "dist/Decentraland Launcher-${{ matrix.config.os }}-x64.dmg"
+          xcrun stapler validate "dist/Decentraland Launcher-${{ matrix.config.os }}-arm64.dmg"
 
       - name: Sign Windows Build (exe)
         uses: sslcom/esigner-codesign@develop
