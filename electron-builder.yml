@@ -28,6 +28,7 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   oneClick: false
+  perMachine: true
   include: buildResources/scripts/windowsInstaller.nsh
 
 mac:
