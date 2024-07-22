@@ -66,7 +66,10 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.START });
 
             await decompressFile(file.path, branchPath);
-            fs.symlinkSync(branchPath, EXPLORER_LATEST_VERSION_PATH);
+            if (fs.existsSync(EXPLORER_LATEST_VERSION_PATH)) {
+              fs.unlinkSync(EXPLORER_LATEST_VERSION_PATH);
+            }
+            fs.symlinkSync(branchPath, EXPLORER_LATEST_VERSION_PATH, 'dir');
 
             if (getOSName() === PLATFORM.MAC) {
               const explorerBinPath = join(branchPath, EXPLORER_MAC_BIN_PATH);
