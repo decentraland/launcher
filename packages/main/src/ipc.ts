@@ -66,29 +66,19 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.START });
 
             await decompressFile(file.path, branchPath);
-            if (fs.existsSync(EXPLORER_LATEST_VERSION_PATH)) {
-              fs.unlinkSync(EXPLORER_LATEST_VERSION_PATH);
-            }
-            fs.symlinkSync(branchPath, EXPLORER_LATEST_VERSION_PATH, 'dir');
 
             if (getOSName() === PLATFORM.MAC) {
               const explorerBinPath = join(branchPath, EXPLORER_MAC_BIN_PATH);
               if (fs.existsSync(explorerBinPath)) {
                 fs.chmodSync(explorerBinPath, 0o755);
               }
-            } else if (getOSName() === PLATFORM.WINDOWS) {
-              // TODO: Implement permissions for Windows
-              // const explorerBinPath = join(branchPath, EXPLORER_WIN_BIN_PATH);
-              // if (fs.existsSync(explorerBinPath)) {
-              //   spawn('cmd.exe', [
-              //     '/c',
-              //     join(EXPLORER_PATH, EXPLORER_REGEDIT_PATH),
-              //     EXPLORER_LATEST_VERSION_PATH,
-              //   ]).on('error', error => {
-              //     log.error(error);
-              //   });
-              // }
             }
+
+            if (fs.existsSync(EXPLORER_LATEST_VERSION_PATH)) {
+              fs.unlinkSync(EXPLORER_LATEST_VERSION_PATH);
+            }
+
+            fs.symlinkSync(branchPath, EXPLORER_LATEST_VERSION_PATH, 'junction');
 
             const versionData = {
               version: version,
