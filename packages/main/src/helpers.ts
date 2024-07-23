@@ -26,7 +26,6 @@ export function getOSName(): PLATFORM {
 export function getAppBasePath(): string {
   const osName = getOSName();
   if (![PLATFORM.MAC, PLATFORM.WINDOWS].includes(osName)) {
-    console.error(`Unsupported OS: ${osName}`);
     throw new Error('Unsupported OS');
   }
 
@@ -59,7 +58,7 @@ export async function decompressFile(sourcePath: string, destinationPath: string
     // Extract all files
     for (const [relativePath, file] of Object.entries(zip.files)) {
       const outputPath = join(destinationPath, relativePath);
-      console.log('Path: ', dirname(outputPath));
+
       ensureDirSync(dirname(outputPath));
 
       if (file.dir) {
@@ -69,10 +68,8 @@ export async function decompressFile(sourcePath: string, destinationPath: string
         fs.writeFileSync(outputPath, content);
       }
     }
-
-    console.log('File decompressed successfully');
   } catch (error) {
-    console.error('Failed to decompress file:', error);
+    throw new Error('Failed to decompress file with error: ' + JSON.stringify(error));
   }
 }
 
