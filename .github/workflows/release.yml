@@ -67,6 +67,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
 
       - uses: actions/setup-node@v4
         with:
@@ -82,7 +84,6 @@ jobs:
         id: version
         uses: paulhatch/semantic-version@v5.4.0
         with:
-          tag_prefix: "v"
           major_pattern: "/\bmajor|breaking\b/"
           minor_pattern: "/\bminor|feat\b/"
           version_format: "${major}.${minor}.${patch}${{ github.ref == 'refs/heads/main' && '' || '-${increment}' }}"
