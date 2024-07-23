@@ -85,7 +85,7 @@ jobs:
           tag_prefix: ""
           major_pattern: "/\bmajor|breaking\b/"
           minor_pattern: "/\bminor|feat\b/"
-          version_format: "${major}.${minor}.${patch}${{ github.ref == 'refs/heads/main' && '' || -${increment} }}"
+          version_format: "${major}.${minor}.${patch}${{ github.ref == 'refs/heads/main' && '' || '-${increment}' }}"
           change_path: "packages/"
           bump_each_commit: true
           bump_each_commit_patch_pattern: "/\bmajor|minor|patch|feat|fix\b/"
