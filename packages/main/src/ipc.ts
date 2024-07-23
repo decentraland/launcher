@@ -15,7 +15,6 @@ export const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
 export const EXPLORER_LATEST_VERSION_PATH = join(EXPLORER_PATH, 'latest');
 export const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
 export const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
-export const EXPLORER_REGEDIT_PATH = 'regedit.bat';
 
 export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: string) {
   try {
