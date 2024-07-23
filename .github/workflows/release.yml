@@ -82,16 +82,15 @@ jobs:
         id: version
         uses: paulhatch/semantic-version@v5.4.0
         with:
-          tag_prefix: ""
+          tag_prefix: "v"
           major_pattern: "/\bmajor|breaking\b/"
           minor_pattern: "/\bminor|feat\b/"
-          version_format: "${major}.${minor}.${patch}"
+          version_format: "${major}.${minor}.${patch}${{ github.ref == 'refs/heads/main' && '' || '-${increment}' }}"
           # change_path: "packages/"
           bump_each_commit: true
           bump_each_commit_patch_pattern: "/\bmajor|minor|patch|feat|fix\b/"
           search_commit_body: true
           user_format_type: "json"
-          debug: true
 
       - name: Compile artifacts ${{ inputs.dry-run && '' || 'and upload them to github release' }}
         # I use this action because it is capable of retrying multiple times if there are any issues with the distribution server
