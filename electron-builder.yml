@@ -1,5 +1,6 @@
 productName: Decentraland Launcher
 artifactName: "Decentraland Launcher-${os}-${arch}.${ext}"
+executableName: Decentraland Launcher
 
 directories:
   output: dist
@@ -30,6 +31,8 @@ nsis:
   oneClick: false
   perMachine: true
   include: buildResources/scripts/windowsInstaller.nsh
+  deleteAppDataOnUninstall: true
+  installerSidebar: buildResources/background.bmp
 
 mac:
   appId: com.Decentraland.Launcher
