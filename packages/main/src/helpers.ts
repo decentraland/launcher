@@ -33,7 +33,7 @@ export function getAppBasePath(): string {
 
   const applicationFolderName = 'DecentralandLauncher';
 
-  return join(osName === PLATFORM.WINDOWS ? app.getAppPath() : app.getPath('appData'), applicationFolderName);
+  return osName === PLATFORM.WINDOWS ? dirname(app.getPath('exe')) : join(app.getPath('appData'), applicationFolderName);
 }
 
 function ensureDirSync(dirPath: string) {

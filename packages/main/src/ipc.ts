@@ -7,14 +7,15 @@ import log from 'electron-log/main';
 import { IPC_EVENTS, IPC_EVENT_DATA_TYPE } from '#shared';
 import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM } from './helpers';
 
-log.initialize();
-
 export const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
 export const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
 export const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
 export const EXPLORER_LATEST_VERSION_PATH = join(EXPLORER_PATH, 'latest');
 export const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
 export const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
+
+log.transports.file.setAppName('DecentralandLauncher');
+log.initialize();
 
 export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: string) {
   try {
@@ -95,6 +96,12 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
             }
           }
         },
+        onCancel: () => {
+          event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
+            type: IPC_EVENT_DATA_TYPE.CANCELLED,
+          });
+          log.error('[Main Window][IPC][DownloadApp] Download Cancelled');
+        },
       });
       return JSON.stringify(resp);
     } else {
@@ -113,7 +120,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
 }
 
 export function isExplorerInstalled(_event: Electron.IpcMainInvokeEvent) {
-  return isAppInstalled(EXPLORER_PATH) && isAppInstalled(EXPLORER_LATEST_VERSION_PATH);
+  return isAppInstalled(EXPLORER_PATH) && fs.existsSync(EXPLORER_LATEST_VERSION_PATH);
 }
 
 export function isExplorerUpdated(_event: Electron.IpcMainInvokeEvent, version: string) {
@@ -158,9 +165,10 @@ export function openApp(event: Electron.IpcMainInvokeEvent, _app: string, versio
     // Validates the explorer binary is executable
     fs.accessSync(explorerBinPath, fs.constants.X_OK);
 
-    spawn(explorerBinPath)
+    spawn(explorerBinPath, { detached: true, stdio: 'ignore' })
       .on('spawn', () => {
         event.sender.send(IPC_EVENTS.OPEN_APP, { type: IPC_EVENT_DATA_TYPE.OPEN });
+        app.quit();
       })
       .on('close', () => {
         app.quit();
