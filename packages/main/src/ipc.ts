@@ -114,7 +114,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
 }
 
 export function isExplorerInstalled(_event: Electron.IpcMainInvokeEvent) {
-  return isAppInstalled(EXPLORER_PATH);
+  return isAppInstalled(EXPLORER_PATH) && isAppInstalled(EXPLORER_LATEST_VERSION_PATH);
 }
 
 export function isExplorerUpdated(_event: Electron.IpcMainInvokeEvent, version: string) {
