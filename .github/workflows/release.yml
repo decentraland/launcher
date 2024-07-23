@@ -95,6 +95,10 @@ jobs:
           search_commit_body: true
           user_format_type: "json"
 
+      - name: Update package.json version
+        run: |
+          ./node_modules/.bin/electron-builder -c.extraMetadata.version=${{ steps.version.outputs.version_tag }}
+
       - name: Compile artifacts ${{ inputs.dry-run && '' || 'and upload them to github release' }}
         # I use this action because it is capable of retrying multiple times if there are any issues with the distribution server
         uses: nick-fields/retry@v3
@@ -112,8 +116,6 @@ jobs:
           # See https://www.electron.build/code-signing
           CSC_LINK: ${{ secrets.MACOS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.MACOS_CSC_KEY_PASSWORD }}
-          # Version build number
-          BUILD_NUMBER: ${{ steps.version.outputs.version_tag }}
           # Publishing artifacts
           GH_TOKEN: ${{ secrets.github_token }} # GitHub token, automatically provided (No need to define this secret in the repo settings)
 
