@@ -2,7 +2,7 @@ import { IpcRendererEvent } from 'electron';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Button, Typography } from 'decentraland-ui2';
 import log from 'electron-log/renderer';
-import { downloadApp, openApp, isExplorerInstalled, isExplorerUpdated, downloadState, installState, minimize, getOSName } from '#preload';
+import { downloadApp, openApp, isExplorerInstalled, isExplorerUpdated, downloadState, installState, getOSName } from '#preload';
 import { IPC_EVENT_DATA_TYPE, IpcRendererEventDataError, IpcRendererDownloadProgressStateEventData, IpcRendererEventData } from '#shared';
 import { APPS, AppState, GithubReleaseResponse } from './types';
 import { Landscape, LoadingBar } from './Home.styles';
@@ -188,7 +188,6 @@ export const Home: React.FC = memo(() => {
       openedApp.current = true;
       setTimeout(() => {
         openApp(APPS.Explorer);
-        minimize();
       }, ONE_SECOND);
     }
 
