@@ -86,7 +86,7 @@ jobs:
         uses: paulhatch/semantic-version@v5.4.0
         with:
           tag_prefix: ""
-          version_format: "${major}.${minor}.${patch}${{ $GITHUB_REF == 'refs/heads/main' && '' || '-${increment}' }}"
+          version_format: "${major}.${minor}.${patch}${{ GITHUB_REF == 'refs/heads/main' && '' || '-${increment}' }}"
           major_pattern: "/^(major|breaking).+/"
           minor_pattern: "/^(minor|feat).+/"
           bump_each_commit: false
