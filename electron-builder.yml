@@ -18,11 +18,13 @@ win:
       arch:
         - x64
   verifyUpdateCodeSignature: false
-  signAndEditExecutable: false
+  signAndEditExecutable: true
   signingHashAlgorithms: 
     - sha256
   rfc3161TimeStampServer: "http://ts.ssl.com"
   timeStampServer: "http://ts.ssl.com"
+  extraResources:
+    - buildResources/icon.ico
 
 nsis:
   allowElevation: true
@@ -46,6 +48,8 @@ mac:
   entitlements: buildResources/entitlements.mac.plist
   extendInfo:
     - NSMicrophoneUsageDescription: "Need microphone access to use voice chat in the application"
+  extraResources:
+    - icon.icns
 
 dmg:
   title: Decentraland Launcher Installer
@@ -53,3 +57,12 @@ dmg:
   window:
     width: 510
     height: 410
+  contents:
+    - x: 160
+      y: 190
+      type: file
+    - x: 340
+      y: 190
+      type: link
+      path: /Applications
+
