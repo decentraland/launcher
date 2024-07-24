@@ -89,7 +89,7 @@ jobs:
           major_pattern: "/\bmajor|breaking\b/"
           minor_pattern: "/\bminor|feat\b/"
           version_format: "${major}.${minor}.${patch}${{ github.ref == 'refs/heads/main' && '' || '-${increment}' }}"
-          bump_each_commit: true
+          bump_each_commit: false
           bump_each_commit_patch_pattern: "/^(patch|fix).+/"
           search_commit_body: true
           user_format_type: "json"
