@@ -86,11 +86,11 @@ jobs:
         uses: paulhatch/semantic-version@v5.4.0
         with:
           tag_prefix: ""
-          major_pattern: "/major|breaking/"
-          minor_pattern: "/minor|feat/"
+          major_pattern: "/\bmajor|breaking\b/"
+          minor_pattern: "/\bminor|feat\b/"
           version_format: "${major}.${minor}.${patch}${{ github.ref == 'refs/heads/main' && '' || '-${increment}' }}"
           bump_each_commit: true
-          bump_each_commit_patch_pattern: "/patch|fix/"
+          bump_each_commit_patch_pattern: "/\bpatch|fix\b/"
           search_commit_body: true
           user_format_type: "json"
 
