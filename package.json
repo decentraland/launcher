@@ -1,6 +1,6 @@
 {
   "name": "@dcl/launcher",
-  "description": "Launcher to manage Decentraland's apps installation",
+  "description": "Launcher to manage Decentraland's app installation",
   "repository": "https://github.com/decentraland/launcher",
   "version": "0.0.0-dev",
   "author": "Decentraland",
