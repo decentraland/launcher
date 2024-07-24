@@ -67,4 +67,5 @@ dmg:
       path: /Applications
 
 publish:
-  vPrefixedTagName: false
+  - provider: github
+    vPrefixedTagName: false
