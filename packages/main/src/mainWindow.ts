@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { IPC_HANDLERS } from '#shared';
 import { downloadApp, openApp, minimizeWindow, isExplorerInstalled, isExplorerUpdated } from './ipc';
-import { getOSName } from './helpers';
+import { getOSName, getAppIcon } from './helpers';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({
@@ -16,6 +16,7 @@ async function createWindow() {
     maxHeight: 849,
     maximizable: false,
     fullscreenable: false,
+    icon: join(getAppIcon()),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

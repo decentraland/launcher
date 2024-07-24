@@ -36,6 +36,17 @@ export function getAppBasePath(): string {
   return osName === PLATFORM.WINDOWS ? dirname(app.getPath('exe')) : join(app.getPath('appData'), applicationFolderName);
 }
 
+export function getAppIcon(): string {
+  const osName = getOSName();
+  if (![PLATFORM.MAC, PLATFORM.WINDOWS].includes(osName)) {
+    throw new Error('Unsupported OS');
+  }
+
+  const appResourcesPath = join(dirname(app.getPath('exe')), 'resources');
+
+  return osName === PLATFORM.WINDOWS ? join(appResourcesPath, 'icon.ico') : join(appResourcesPath, 'icon.icns');
+}
+
 function ensureDirSync(dirPath: string) {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
