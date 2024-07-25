@@ -66,3 +66,7 @@ dmg:
       y: 215
       type: link
       path: /Applications
+
+publish:
+  - provider: github
+    vPrefixedTagName: false
