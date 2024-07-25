@@ -80,6 +80,8 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
       - run: npm run build
+        env:
+          MODE: production
 
       - name: Generate Release Version
         id: version
