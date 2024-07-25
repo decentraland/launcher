@@ -158,7 +158,7 @@ export const Home: React.FC = memo(() => {
     return (
       <Box>
         <Typography variant="h4" align="center">
-          Downloading {isUpdating ? 'Update' : null}
+          {isUpdating ? 'Downloading Update' : 'Downloading Decentraland'}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <LoadingBar variant="determinate" value={downloadingProgress} sx={{ mr: 1 }} />
@@ -174,7 +174,7 @@ export const Home: React.FC = memo(() => {
     return (
       <Box>
         <Typography variant="h4" align="center">
-          Installing {isUpdating ? 'Update' : null}
+          {isUpdating ? 'Installing Update' : 'Installation in Progress'}
         </Typography>
         <Box paddingTop={'10px'} paddingBottom={'10px'}>
           <LoadingBar />
@@ -191,7 +191,7 @@ export const Home: React.FC = memo(() => {
       }, ONE_SECOND);
     }
 
-    return <Typography variant="h4">Launching</Typography>;
+    return <Typography variant="h4">Launching Decentraland</Typography>;
   }, []);
 
   const renderError = useCallback(() => {
