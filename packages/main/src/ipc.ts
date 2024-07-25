@@ -7,22 +7,19 @@ import log from 'electron-log/main';
 import { IPC_EVENTS, IPC_EVENT_DATA_TYPE } from '#shared';
 import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM } from './helpers';
 
-export const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
-export const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
-export const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
-export const EXPLORER_LATEST_VERSION_PATH = join(EXPLORER_PATH, 'latest');
-export const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
-export const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
-
-log.transports.file.setAppName('DecentralandLauncher');
-log.initialize();
+const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
+const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
+const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
+const EXPLORER_LATEST_VERSION_PATH = join(EXPLORER_PATH, 'latest');
+const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
+const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
 
 export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: string) {
   try {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return;
 
-    log.debug('[Main Window][IPC][DownloadApp] Downloading', url);
+    log.info('[Main Window][IPC][DownloadApp] Downloading', url);
     const versionPattern = /https:\/\/github.com\/decentraland\/.+\/releases\/download\/(v?\d+\.\d+\.\d+-?\w+)\/(\w+.zip)/;
     const version = url.match(versionPattern)?.[1];
 
@@ -41,7 +38,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
       const versionData = fs.existsSync(EXPLORER_VERSION_PATH) ? JSON.parse(fs.readFileSync(EXPLORER_VERSION_PATH, 'utf8')) : null;
 
       if (versionData && versionData.version === version) {
-        log.debug('[Main Window][IPC][DownloadApp] This version is already installed');
+        log.info('[Main Window][IPC][DownloadApp] This version is already installed');
         event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.CANCELLED });
         return;
       }
@@ -141,7 +138,7 @@ function getExplorerBinPath(version?: string): string {
 
 export function openApp(event: Electron.IpcMainInvokeEvent, _app: string, version?: string) {
   try {
-    log.debug('[Main Window][IPC][OpenApp] Opening App');
+    log.info('[Main Window][IPC][OpenApp] Opening App');
 
     const explorerBinPath = getExplorerBinPath(version);
 
@@ -168,7 +165,7 @@ export function openApp(event: Electron.IpcMainInvokeEvent, _app: string, versio
     spawn(explorerBinPath, { detached: true, stdio: 'ignore' })
       .on('spawn', () => {
         event.sender.send(IPC_EVENTS.OPEN_APP, { type: IPC_EVENT_DATA_TYPE.OPEN });
-        app.quit();
+        BrowserWindow.getFocusedWindow()?.close();
       })
       .on('close', () => {
         app.quit();

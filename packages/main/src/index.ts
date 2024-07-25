@@ -1,7 +1,12 @@
 import { app } from 'electron';
 import updater from 'electron-updater';
+import log from 'electron-log/main';
 import { restoreOrCreateWindow } from '/@/mainWindow';
 import './security-restrictions';
+
+// Initialize logger
+log.transports.file.setAppName('DecentralandLauncher');
+log.initialize();
 
 /**
  * Prevent electron from running multiple instances.
@@ -22,7 +27,7 @@ app.disableHardwareAcceleration();
  * Shout down background process if all windows was closed
  */
 app.on('window-all-closed', () => {
-  app.quit();
+  updateAppAndQuit();
 });
 
 /**
@@ -47,9 +52,28 @@ app
  * if you compile production app without publishing it to distribution server.
  * Like `npm run compile` does. It's ok 😅
  */
-if (import.meta.env.PROD) {
-  app
-    .whenReady()
-    .then(() => updater.autoUpdater.checkForUpdatesAndNotify())
-    .catch(e => console.error('Failed check and install updates:', e));
+function updateAppAndQuit() {
+  if (import.meta.env.PROD) {
+    updater.autoUpdater.checkForUpdates();
+    updater.autoUpdater.on('checking-for-update', () => {
+      log.info('[Main Window][AutoUpdater] Checking for updates');
+    });
+    updater.autoUpdater.on('update-available', _info => {
+      log.info('[Main Window][AutoUpdater] Update available');
+    });
+    updater.autoUpdater.on('update-not-available', _info => {
+      log.info('[Main Window][AutoUpdater] Update not available');
+      app.quit();
+    });
+    updater.autoUpdater.on('update-downloaded', _info => {
+      log.info('[Main Window][AutoUpdater] Update downloaded');
+      updater.autoUpdater.quitAndInstall();
+    });
+    updater.autoUpdater.on('error', err => {
+      log.error('[Main Window][AutoUpdater] Error in auto-updater', err);
+      app.quit();
+    });
+  } else {
+    app.quit();
+  }
 }
