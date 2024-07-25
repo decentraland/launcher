@@ -32,9 +32,10 @@ nsis:
   createDesktopShortcut: true
   oneClick: false
   perMachine: true
-  include: buildResources/scripts/windowsInstaller.nsh
   deleteAppDataOnUninstall: true
+  include: buildResources/scripts/windowsInstaller.nsh
   installerSidebar: buildResources/background.bmp
+  installerIcon: buildResources/icon.ico
 
 mac:
   appId: com.Decentraland.Launcher
@@ -55,17 +56,13 @@ dmg:
   title: Decentraland Launcher Installer
   background: buildResources/background.png
   window:
-    width: 510
-    height: 410
+    width: 714
+    height: 472
   contents:
-    - x: 160
-      y: 190
+    - x: 230
+      y: 215
       type: file
-    - x: 340
-      y: 190
+    - x: 460
+      y: 215
       type: link
       path: /Applications
-
-publish:
-  - provider: github
-    vPrefixedTagName: false
