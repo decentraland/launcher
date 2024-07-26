@@ -54,7 +54,7 @@ app
  */
 function updateAppAndQuit() {
   if (import.meta.env.PROD) {
-    updater.autoUpdater.checkForUpdates();
+    updater.autoUpdater.autoRunAppAfterInstall = false;
     updater.autoUpdater.on('checking-for-update', () => {
       log.info('[Main Window][AutoUpdater] Checking for updates');
     });
@@ -67,12 +67,13 @@ function updateAppAndQuit() {
     });
     updater.autoUpdater.on('update-downloaded', _info => {
       log.info('[Main Window][AutoUpdater] Update downloaded');
-      updater.autoUpdater.quitAndInstall();
+      updater.autoUpdater.quitAndInstall(true, false);
     });
     updater.autoUpdater.on('error', err => {
       log.error('[Main Window][AutoUpdater] Error in auto-updater', err);
       app.quit();
     });
+    updater.autoUpdater.checkForUpdates();
   } else {
     app.quit();
   }
