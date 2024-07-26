@@ -60,7 +60,6 @@
     "vitest": "1.6.0"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^2.2.5",
     "decentraland-ui2": "^0.0.2",
     "electron-dl": "^4.0.0",
     "electron-log": "^5.1.5",
