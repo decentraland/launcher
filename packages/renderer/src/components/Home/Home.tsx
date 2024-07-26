@@ -34,6 +34,7 @@ export const Home: React.FC = memo(() => {
   const initialized = useRef(false);
   const openedApp = useRef(false);
   const [state, setState] = useState<AppState | undefined>(undefined);
+  const [isInstalled, setIsInstalled] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | undefined>(undefined);
   const [downloadingProgress, setDownloadingProgress] = useState(0);
@@ -131,11 +132,12 @@ export const Home: React.FC = memo(() => {
       getLatestRelease()
         .then(async ({ browser_download_url: url, version }) => {
           setDownloadUrl(url);
-          const isInstalled = await isExplorerInstalled();
-          if (!isInstalled) {
+          const _isInstalled = await isExplorerInstalled();
+          if (!_isInstalled) {
             handleDownload(url);
             return;
           }
+          setIsInstalled(true);
           setState(AppState.Installed);
 
           const _isUpdated = await isExplorerUpdated(version);
@@ -153,7 +155,7 @@ export const Home: React.FC = memo(() => {
   }, []);
 
   const renderDownloadStep = useCallback(() => {
-    const isUpdating = state === AppState.Installing && !isUpdated;
+    const isUpdating = state === AppState.Installing && isInstalled && !isUpdated;
 
     return (
       <Box>
@@ -166,10 +168,10 @@ export const Home: React.FC = memo(() => {
         </Box>
       </Box>
     );
-  }, [downloadingProgress, state, isUpdated]);
+  }, [downloadingProgress, state, isInstalled, isUpdated]);
 
   const renderInstallStep = useCallback(() => {
-    const isUpdating = state === AppState.Installing && !isUpdated;
+    const isUpdating = state === AppState.Installing && isInstalled && !isUpdated;
 
     return (
       <Box>
@@ -181,7 +183,7 @@ export const Home: React.FC = memo(() => {
         </Box>
       </Box>
     );
-  }, [state, isUpdated]);
+  }, [state, isInstalled, isUpdated]);
 
   const renderLaunchStep = useCallback(() => {
     if (openedApp.current === false) {
