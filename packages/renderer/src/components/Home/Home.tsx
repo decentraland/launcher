@@ -4,7 +4,7 @@ import { Box, Button, Typography } from 'decentraland-ui2';
 import log from 'electron-log/renderer';
 import { downloadApp, openApp, isExplorerInstalled, isExplorerUpdated, downloadState, installState, getOSName } from '#preload';
 import { IPC_EVENT_DATA_TYPE, IpcRendererEventDataError, IpcRendererDownloadProgressStateEventData, IpcRendererEventData } from '#shared';
-import { APPS, AppState, GithubReleaseResponse } from './types';
+import { APPS, AppState, GithubReleaseResponse, GithubRelease } from './types';
 import { Landscape, LoadingBar } from './Home.styles';
 import LANDSCAPE_IMG from '/@assets/landscape.png';
 
@@ -12,19 +12,22 @@ const ONE_SECOND = 1000;
 const FIVE_SECONDS = 5 * ONE_SECOND;
 
 async function getLatestRelease(): Promise<GithubReleaseResponse> {
-  const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases/latest`);
+  const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases`);
   if (resp.status === 200) {
-    const data = (await resp.json()) as { assets: Record<string, string>[]; name: string };
+    const releases: GithubRelease[] = await resp.json();
     const os = await getOSName();
-    const asset = data.assets.find((asset: Record<string, string>) => asset.name.includes(os.toLowerCase()));
-    if (asset) {
-      return {
-        browser_download_url: asset.browser_download_url,
-        version: data.name,
-      };
-    } else {
-      throw new Error('No asset found for your platform');
+    for (const release of releases) {
+      for (const asset of release.assets) {
+        if (asset.name.toLowerCase().includes(os.toLowerCase())) {
+          return {
+            browser_download_url: asset.browser_download_url,
+            version: release.name,
+          };
+        }
+      }
     }
+
+    throw new Error('No asset found for your platform');
   }
 
   throw new Error('Failed to fetch latest release: ' + JSON.stringify(resp));

@@ -7,6 +7,15 @@ export interface GithubReleaseResponse {
   version: string;
 }
 
+export interface GithubRelease {
+  tag_name: string;
+  name: string;
+  assets: {
+    name: string;
+    browser_download_url: string;
+  }[];
+}
+
 export enum AppState {
   Downloading,
   Downloaded,
