@@ -165,7 +165,9 @@ export function openApp(event: Electron.IpcMainInvokeEvent, _app: string, versio
     spawn(explorerBinPath, { detached: true, stdio: 'ignore' })
       .on('spawn', () => {
         event.sender.send(IPC_EVENTS.OPEN_APP, { type: IPC_EVENT_DATA_TYPE.OPEN });
-        BrowserWindow.getFocusedWindow()?.close();
+        BrowserWindow.getAllWindows()
+          .find(w => !w.isDestroyed())
+          ?.close();
       })
       .on('close', () => {
         app.quit();
