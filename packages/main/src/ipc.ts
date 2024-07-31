@@ -4,8 +4,8 @@ import { spawn } from 'child_process';
 import { app, BrowserWindow } from 'electron';
 import { download } from 'electron-dl';
 import log from 'electron-log/main';
-import { IPC_EVENTS, IPC_EVENT_DATA_TYPE } from '#shared';
-import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM } from './helpers';
+import { Analytics, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT } from '#shared';
+import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM, getUserId } from './helpers';
 
 const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
 const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
@@ -13,6 +13,8 @@ const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
 const EXPLORER_LATEST_VERSION_PATH = join(EXPLORER_PATH, 'latest');
 const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
 const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
+
+const analytics = new Analytics(getUserId());
 
 export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: string) {
   try {
@@ -50,6 +52,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
             type: IPC_EVENT_DATA_TYPE.START,
             progress: 0,
           });
+          analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION, { version });
         },
         onProgress: progress => {
           event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
@@ -61,6 +64,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
           try {
             event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.COMPLETED });
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.START });
+            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_START, { version });
 
             await decompressFile(file.path, branchPath);
 
@@ -84,9 +88,11 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
             fs.writeFileSync(EXPLORER_VERSION_PATH, JSON.stringify(versionData));
 
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.COMPLETED });
+            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_SUCCESS, { version });
           } catch (error) {
             log.error('[Main Window][IPC][DownloadApp] Failed to install app:', error);
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
+            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_ERROR, { version });
           } finally {
             if (fs.existsSync(file.path)) {
               fs.rmSync(file.path);
