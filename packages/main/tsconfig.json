@@ -11,8 +11,8 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "/@/*": ["./src/*"],
       "#shared": ["../shared/src/index"],
+      "/@/*": ["./src/*"],
     }
   },
   "include": ["src/**/*.ts", "../../types/**/*.d.ts"],

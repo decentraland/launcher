@@ -19,9 +19,9 @@ const config = {
   envDir: PROJECT_ROOT,
   resolve: {
     alias: {
-      '/@/': join(PACKAGE_ROOT, 'src') + '/',
+      '#shared': join(PROJECT_ROOT, 'packages/shared/src/index.ts'),
       '/@assets/': join(PACKAGE_ROOT, 'assets') + '/',
-      '#shared': join(PACKAGE_ROOT, '../shared/src/index.ts'),
+      '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
   base: '',
@@ -47,7 +47,7 @@ const config = {
   plugins: [
     react(),
     renderer.vite({
-      preloadEntry: join(PACKAGE_ROOT, '../preload/src/index.ts'),
+      preloadEntry: join(PROJECT_ROOT, 'packages/preload/src/index.ts'),
     }),
   ],
 };

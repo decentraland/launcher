@@ -36,7 +36,7 @@ const config = {
   },
   resolve: {
     alias: {
-      '#shared': join(PACKAGE_ROOT, '../shared/src/index.ts'),
+      '#shared': join(PROJECT_ROOT, 'packages/shared/src/index.ts'),
     },
   },
   plugins: [preload.vite()],
