@@ -3,6 +3,7 @@ import updater from 'electron-updater';
 import log from 'electron-log/main';
 import { restoreOrCreateWindow } from '/@/mainWindow';
 import './security-restrictions';
+import { getOSName, PLATFORM } from './helpers';
 
 // Initialize logger
 log.transports.file.setAppName('DecentralandLauncher');
@@ -65,9 +66,13 @@ function updateAppAndQuit() {
       log.info('[Main Window][AutoUpdater] Update not available');
       app.quit();
     });
+    updater.autoUpdater.once('download-progress', _info => {
+      log.info('[Main Window][AutoUpdater] Downloading update');
+    });
     updater.autoUpdater.on('update-downloaded', _info => {
       log.info('[Main Window][AutoUpdater] Update downloaded');
-      updater.autoUpdater.quitAndInstall(true, false);
+      const silent = getOSName() === PLATFORM.WINDOWS;
+      updater.autoUpdater.quitAndInstall(silent, false);
     });
     updater.autoUpdater.on('error', err => {
       log.error('[Main Window][AutoUpdater] Error in auto-updater', err);
