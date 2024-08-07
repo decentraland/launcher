@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow } from 'electron';
-import { initIpcHandlers } from './ipc';
+import { initIpcHandlers } from './modules/ipc';
 import { getAppIcon, getAdditionalArguments } from './helpers';
 
 async function createWindow() {

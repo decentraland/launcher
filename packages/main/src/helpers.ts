@@ -1,9 +1,7 @@
-import { dirname, join } from 'path';
-import fs from 'fs';
+import { dirname, join } from 'node:path';
+import fs from 'node:fs';
 import { app } from 'electron';
 import JSZip from 'jszip';
-import { v4 as uuid } from 'uuid';
-import { ConfigManager } from './config';
 
 export enum PLATFORM {
   MAC = 'mac',
@@ -108,23 +106,24 @@ export function isAppUpdated(appPath: string, version: string): boolean {
   return versionData.version === version;
 }
 
-export function getConfig(key: string): unknown {
-  const config = new ConfigManager();
-  return config.get(key);
-}
+/**
+ * Extracts additional arguments from process.argv.
+ *
+ * @returns {string[]} An array of additional arguments that match specific patterns.
+ */
+export function getAdditionalArguments(): string[] {
+  const args = [];
 
-export function setConfig(key: string, value: string): unknown {
-  const config = new ConfigManager();
-  return config.set(key, value);
-}
-
-export function getUserId() {
-  let userId = getConfig('analytics-user-id');
-  if (!userId) {
-    userId = uuid();
-    setConfig('analytics-user-id', userId as string);
+  if (process.argv.length > 2) {
+    for (let i = 2; i < process.argv.length; i++) {
+      const arg = process.argv[i].toLowerCase();
+      if (/--(version|prerelease)/.test(arg)) {
+        args.push(arg);
+      }
+    }
   }
-  return userId as string;
+
+  return args;
 }
 
 export function getAdditionalArguments(): string[] {

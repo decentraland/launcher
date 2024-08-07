@@ -43,7 +43,14 @@ function getErrorMessage(error: unknown): string {
   return 'An error occurred';
 }
 
-async function getLatestRelease(version?: string, isPrerelease?: boolean): Promise<GithubReleaseResponse> {
+/**
+ * Retrieves the latest release information from the GitHub API.
+ * @param version - Optional. The specific version to retrieve. If not provided, retrieves the latest version.
+ * @param isPrerelease - Optional. Specifies whether to retrieve a prerelease version. Default is false.
+ * @returns A Promise that resolves to the latest release information.
+ * @throws An error if no asset is found for the specified platform or if the API request fails.
+ */
+async function getLatestRelease(version?: string, isPrerelease: boolean = false): Promise<GithubReleaseResponse> {
   try {
     const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases`);
     if (resp.status === 200) {
@@ -192,16 +199,16 @@ export const Home: React.FC = memo(() => {
           setState(AppState.Fetching);
           const { browser_download_url: url, version } = await getLatestRelease(getVersion(), getIsPrerelease());
           setDownloadUrl(url);
-          const _isInstalled = await isExplorerInstalled();
-          if (!_isInstalled) {
+          const isInstalled = await isExplorerInstalled();
+          if (!isInstalled) {
             handleDownload(url);
             return;
           }
           setIsInstalled(true);
           setState(AppState.Installed);
 
-          const _isUpdated = await isExplorerUpdated(version);
-          if (!_isUpdated) {
+          const isUpdated = await isExplorerUpdated(version);
+          if (!isUpdated) {
             handleDownload(url);
             return;
           }
