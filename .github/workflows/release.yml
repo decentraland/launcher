@@ -4,7 +4,7 @@ on:
     inputs:
       dry-run:
         description: 'Compiles the app but not upload artifacts to distribution server'
-        default: true
+        default: false
         required: false
         type: boolean
     secrets:
