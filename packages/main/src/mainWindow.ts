@@ -1,9 +1,8 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { app, BrowserWindow, ipcMain } from 'electron';
-import { IPC_HANDLERS } from '#shared';
-import { downloadApp, openApp, minimizeWindow, isExplorerInstalled, isExplorerUpdated } from './ipc';
-import { getOSName, getAppIcon } from './helpers';
+import { app, BrowserWindow } from 'electron';
+import { initIpcHandlers } from './modules/ipc';
+import { getAppIcon, getAdditionalArguments } from './helpers';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({
@@ -23,6 +22,7 @@ async function createWindow() {
       sandbox: false, // Sandbox disabled because the demo of preload script depend on the Node.js api
       webviewTag: false, // The webview tag is not recommended. Consider alternatives like an iframe or Electron's BrowserView. @see https://www.electronjs.org/docs/latest/api/webview-tag#warning
       preload: join(app.getAppPath(), 'packages/preload/dist/index.mjs'),
+      additionalArguments: getAdditionalArguments(),
     },
   });
   browserWindow.setMenuBarVisibility(false);
@@ -64,12 +64,7 @@ async function createWindow() {
     await browserWindow.loadFile(fileURLToPath(new URL('./../../renderer/dist/index.html', import.meta.url)));
   }
 
-  ipcMain.handle(IPC_HANDLERS.DOWNLOAD_APP, downloadApp);
-  ipcMain.handle(IPC_HANDLERS.OPEN_APP, openApp);
-  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_INSTALLED, isExplorerInstalled);
-  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
-  ipcMain.handle(IPC_HANDLERS.MINIMIZE_WINDOW, minimizeWindow);
-  ipcMain.handle(IPC_HANDLERS.GET_OS_NAME, getOSName);
+  initIpcHandlers();
 
   return browserWindow;
 }
