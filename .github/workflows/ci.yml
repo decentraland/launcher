@@ -29,14 +29,6 @@ on:
       - .gitignore
       - '.idea/**'
       - '.vscode/**'
-  workflow_call:
-    secrets:
-      MACOS_CSC_LINK:
-        description: 'A token passed from the caller workflow'
-        required: true
-      MACOS_CSC_KEY_PASSWORD:
-        description: 'A token passed from the caller workflow'
-        required: true
 
 concurrency:
   group: ci-${{ github.ref }}
