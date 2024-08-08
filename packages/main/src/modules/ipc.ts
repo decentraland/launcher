@@ -169,7 +169,10 @@ export async function openApp(event: Electron.IpcMainInvokeEvent, _app: string, 
     // Validates the explorer binary is executable
     fs.accessSync(explorerBinPath, fs.constants.X_OK);
 
-    spawn(explorerBinPath, { detached: true, stdio: 'ignore' })
+    // Forward the deeplink url to the explorer containing all the params
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const explorerArgs = [(global as any).protocol].filter(arg => !!arg);
+    spawn(explorerBinPath, explorerArgs, { detached: true, stdio: 'ignore' })
       .on('spawn', () => {
         event.sender.send(IPC_EVENTS.OPEN_APP, { type: IPC_EVENT_DATA_TYPE.OPEN });
         BrowserWindow.getAllWindows()
