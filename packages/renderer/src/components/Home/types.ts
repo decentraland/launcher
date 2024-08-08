@@ -14,6 +14,8 @@ export interface GithubRelease {
     name: string;
     browser_download_url: string;
   }[];
+  draft: boolean;
+  prerelease: boolean;
 }
 
 export enum AppState {

@@ -1,11 +1,12 @@
 import { join } from 'path';
 import fs from 'node:fs';
 import { spawn } from 'child_process';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import { download } from 'electron-dl';
 import log from 'electron-log/main';
-import { Analytics, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT } from '#shared';
-import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM, getUserId } from './helpers';
+import { Analytics, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT, IPC_HANDLERS } from '#shared';
+import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM } from '../helpers';
+import { getUserId } from './config';
 
 const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
 const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
@@ -22,11 +23,12 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
     if (!win) return;
 
     log.info('[Main Window][IPC][DownloadApp] Downloading', url);
-    const versionPattern = /https:\/\/github.com\/decentraland\/.+\/releases\/download\/(v?\d+\.\d+\.\d+-?\w+)\/(\w+.zip)/;
+
+    const versionPattern = /^https:\/\/github.com\/decentraland\/.+\/releases\/download\/(v?\d+\.\d+\.\d+-?\w+)\/(\w+.zip)$/;
     const version = url.match(versionPattern)?.[1];
 
     if (!version) {
-      log.error('[Main Window][IPC][DownloadApp] No version provided');
+      log.error('[Main Window][IPC][DownloadApp] No valid url provided');
       event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
         type: IPC_EVENT_DATA_TYPE.ERROR,
         error: 'No version provided',
@@ -142,10 +144,9 @@ function getExplorerBinPath(version?: string): string {
   }
 }
 
-export function openApp(event: Electron.IpcMainInvokeEvent, _app: string, version?: string) {
+export async function openApp(event: Electron.IpcMainInvokeEvent, _app: string, version?: string) {
   try {
     log.info('[Main Window][IPC][OpenApp] Opening App');
-
     const explorerBinPath = getExplorerBinPath(version);
 
     if (!fs.existsSync(explorerBinPath)) {
@@ -168,7 +169,10 @@ export function openApp(event: Electron.IpcMainInvokeEvent, _app: string, versio
     // Validates the explorer binary is executable
     fs.accessSync(explorerBinPath, fs.constants.X_OK);
 
-    spawn(explorerBinPath, { detached: true, stdio: 'ignore' })
+    // Forward the deeplink url to the explorer containing all the params
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const explorerArgs = [(global as any).protocol].filter(arg => !!arg);
+    spawn(explorerBinPath, explorerArgs, { detached: true, stdio: 'ignore' })
       .on('spawn', () => {
         event.sender.send(IPC_EVENTS.OPEN_APP, { type: IPC_EVENT_DATA_TYPE.OPEN });
         BrowserWindow.getAllWindows()
@@ -197,4 +201,13 @@ export function minimizeWindow(_event: Electron.IpcMainInvokeEvent) {
   } catch (error) {
     log.error('[Main Window][IPC][MinimizeWindow] Failed to minimize window:', error);
   }
+}
+
+export function initIpcHandlers() {
+  ipcMain.handle(IPC_HANDLERS.DOWNLOAD_APP, downloadApp);
+  ipcMain.handle(IPC_HANDLERS.OPEN_APP, openApp);
+  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_INSTALLED, isExplorerInstalled);
+  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
+  ipcMain.handle(IPC_HANDLERS.MINIMIZE_WINDOW, minimizeWindow);
+  ipcMain.handle(IPC_HANDLERS.GET_OS_NAME, getOSName);
 }
