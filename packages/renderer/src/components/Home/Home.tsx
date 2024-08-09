@@ -21,6 +21,18 @@ import LANDSCAPE_IMG from '/@assets/landscape.png';
 const ONE_SECOND = 1000;
 const FIVE_SECONDS = 5 * ONE_SECOND;
 
+function getErrorMessage(error: unknown): string {
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return 'An error occurred';
+}
+
 async function getLatestRelease(version?: string, isPrerelease?: boolean): Promise<GithubReleaseResponse> {
   const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases`);
   if (resp.status === 200) {
@@ -171,8 +183,9 @@ export const Home: React.FC = memo(() => {
           }
           setIsUpdated(true);
         } catch (error) {
-          setError(error as string);
-          log.error('[Renderer][Home][GetLatestRelease]', error);
+          const errorMessage = getErrorMessage(error);
+          setError(getErrorMessage(errorMessage));
+          log.error('[Renderer][Home][GetLatestRelease]', errorMessage);
         }
       }
     };
@@ -231,10 +244,10 @@ export const Home: React.FC = memo(() => {
       return (
         <Box>
           <Typography variant="h4" align="center">
-            {isDownloading ? 'Download failed' : 'Install failed'}
+            {isDownloading ? 'Download failed' : isInstalling ? 'Install failed' : 'Error'}
           </Typography>
           <Typography variant="body1" align="center">
-            {isDownloading ? 'Please check your internet connection and try again.' : 'Please try again.'}
+            {isDownloading ? 'Please check your internet connection and try again.' : isInstalling ? 'Please try again.' : error}
           </Typography>
           <Box display="flex" justifyContent="center" marginTop={'10px'}>
             <Button onClick={() => (isDownloading ? handleRetryDownload(true) : handleRetryInstall(true))}>Retry</Button>
@@ -250,7 +263,7 @@ export const Home: React.FC = memo(() => {
         </Typography>
       </Box>
     );
-  }, [downloadRetry, installRetry, state]);
+  }, [error, downloadRetry, installRetry, state]);
 
   return (
     <Box display="flex" alignItems={'center'} justifyContent={'center'} width={'100%'}>
