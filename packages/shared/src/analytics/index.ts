@@ -17,6 +17,10 @@ export class Analytics {
   constructor(userId: string) {
     this.userId = userId;
 
+    if (!import.meta.env.PROD) {
+      return;
+    }
+
     if (Analytics.instance) {
       return Analytics.instance;
     }
