@@ -2,7 +2,17 @@ import { IpcRendererEvent } from 'electron';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Button, Typography } from 'decentraland-ui2';
 import log from 'electron-log/renderer';
-import { downloadApp, openApp, isExplorerInstalled, isExplorerUpdated, downloadState, installState, getOSName } from '#preload';
+import {
+  downloadApp,
+  openApp,
+  isExplorerInstalled,
+  isExplorerUpdated,
+  downloadState,
+  installState,
+  getOSName,
+  getVersion,
+  getIsPrerelease,
+} from '#preload';
 import { IPC_EVENT_DATA_TYPE, IpcRendererEventDataError, IpcRendererDownloadProgressStateEventData, IpcRendererEventData } from '#shared';
 import { APPS, AppState, GithubReleaseResponse, GithubRelease } from './types';
 import { Landscape, LoadingBar } from './Home.styles';
@@ -11,18 +21,27 @@ import LANDSCAPE_IMG from '/@assets/landscape.png';
 const ONE_SECOND = 1000;
 const FIVE_SECONDS = 5 * ONE_SECOND;
 
-async function getLatestRelease(): Promise<GithubReleaseResponse> {
+async function getLatestRelease(version?: string, isPrerelease?: boolean): Promise<GithubReleaseResponse> {
   const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases`);
   if (resp.status === 200) {
     const releases: GithubRelease[] = await resp.json();
     const os = await getOSName();
     for (const release of releases) {
       for (const asset of release.assets) {
-        if (asset.name.toLowerCase().includes(os.toLowerCase())) {
+        const isMatchingOS = asset.name.toLowerCase().includes(os.toLowerCase());
+        const isValidVersion = !version || version === release.name;
+        const isValidPrerelease = !isPrerelease || (isPrerelease && !!release.prerelease);
+        if (isMatchingOS && isValidVersion && isValidPrerelease) {
           return {
             browser_download_url: asset.browser_download_url,
             version: release.name,
           };
+        } else if (!isMatchingOS) {
+          throw new Error('No asset found for your platform');
+        } else if (!isValidVersion) {
+          throw new Error('No asset found for the specified version');
+        } else if (!isValidPrerelease) {
+          throw new Error('No asset found with the prerelease flag');
         }
       }
     }
@@ -130,10 +149,12 @@ export const Home: React.FC = memo(() => {
   }, []);
 
   useEffect(() => {
-    if (!initialized.current) {
-      initialized.current = true;
-      getLatestRelease()
-        .then(async ({ browser_download_url: url, version }) => {
+    const fetchReleaseData = async () => {
+      if (!initialized.current) {
+        initialized.current = true;
+
+        try {
+          const { browser_download_url: url, version } = await getLatestRelease(getVersion(), getIsPrerelease());
           setDownloadUrl(url);
           const _isInstalled = await isExplorerInstalled();
           if (!_isInstalled) {
@@ -149,12 +170,14 @@ export const Home: React.FC = memo(() => {
             return;
           }
           setIsUpdated(true);
-        })
-        .catch((error: Error) => {
-          setError(error.message);
+        } catch (error) {
+          setError(error as string);
           log.error('[Renderer][Home][GetLatestRelease]', error);
-        });
-    }
+        }
+      }
+    };
+
+    fetchReleaseData();
   }, []);
 
   const renderDownloadStep = useCallback(() => {
