@@ -15,6 +15,7 @@ import {
   isExplorerUpdated,
   getOSName,
 } from './ipc';
+import { getVersion, getIsPrerelease } from './argvs';
 export {
   sha256sum,
   versions,
@@ -28,4 +29,6 @@ export {
   isExplorerInstalled,
   isExplorerUpdated,
   getOSName,
+  getVersion,
+  getIsPrerelease,
 };
