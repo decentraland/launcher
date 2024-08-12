@@ -89,7 +89,7 @@
   ${endif}
 !macroend
 
-!macro customUnWelcomePage
+!macro customUnInstall
   ${ifNot} ${isUpdated}
     DeleteRegKey HKCR "decentraland"
   ${endIf}
