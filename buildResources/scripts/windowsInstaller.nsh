@@ -1,3 +1,13 @@
+!macro customInstall
+  ${ifNot} ${isUpdated}
+    # Makes the app runs as admin
+    WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" "$INSTDIR\${APP_FILENAME}.exe" "RUNASADMIN"
+
+    # Delete old registry if exists
+    DeleteRegKey HKCR "decentraland"
+  ${endIf}
+!macroend
+
 !ifdef BUILD_UNINSTALLER
   Function un.customAtomicRMDir
     Exch $R0
@@ -77,4 +87,10 @@
   ${else}
     RMDir /r $INSTDIR
   ${endif}
+!macroend
+
+!macro customUnWelcomePage
+  ${ifNot} ${isUpdated}
+    DeleteRegKey HKCR "decentraland"
+  ${endIf}
 !macroend
