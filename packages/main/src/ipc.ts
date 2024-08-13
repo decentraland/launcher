@@ -52,7 +52,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
             type: IPC_EVENT_DATA_TYPE.START,
             progress: 0,
           });
-          analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION, { version });
+          analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION, { version, os: getOSName() });
         },
         onProgress: progress => {
           event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
@@ -64,7 +64,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
           try {
             event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.COMPLETED });
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.START });
-            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_START, { version });
+            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_START, { version, os: getOSName() });
 
             await decompressFile(file.path, branchPath);
 
@@ -88,11 +88,11 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
             fs.writeFileSync(EXPLORER_VERSION_PATH, JSON.stringify(versionData));
 
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.COMPLETED });
-            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_SUCCESS, { version });
+            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_SUCCESS, { version, os: getOSName() });
           } catch (error) {
             log.error('[Main Window][IPC][DownloadApp] Failed to install app:', error);
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
-            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_ERROR, { version });
+            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_ERROR, { version, os: getOSName() });
           } finally {
             if (fs.existsSync(file.path)) {
               fs.rmSync(file.path);

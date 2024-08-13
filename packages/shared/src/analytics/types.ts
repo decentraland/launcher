@@ -9,14 +9,18 @@ export enum ANALYTICS_EVENT {
 export type ANALYTICS_EVENTS = {
   [ANALYTICS_EVENT.DOWNLOAD_VERSION]: {
     version: string;
+    os: string;
   };
   [ANALYTICS_EVENT.INSTALL_VERSION_START]: {
     version: string;
+    os: string;
   };
   [ANALYTICS_EVENT.INSTALL_VERSION_SUCCESS]: {
     version: string;
+    os: string;
   };
   [ANALYTICS_EVENT.INSTALL_VERSION_ERROR]: {
     version: string;
+    os: string;
   };
 };
