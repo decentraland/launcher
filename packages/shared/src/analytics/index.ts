@@ -1,4 +1,5 @@
 import { Analytics as SegmentAnalytics } from '@segment/analytics-node';
+import { v4 as uuid } from 'uuid';
 import { type ANALYTICS_EVENTS } from './types';
 
 const APP_ID = 'decentraland-launcher';
@@ -13,6 +14,7 @@ export class Analytics {
   private analytics: SegmentAnalytics | { track(): void } = noopAnalytics;
   private userId: string;
   private appId: string = APP_ID;
+  private sessionId: string = uuid();
 
   constructor(userId: string) {
     this.userId = userId;
@@ -46,6 +48,13 @@ export class Analytics {
       traits = {
         ...traits,
         appId: this.appId,
+      };
+    }
+
+    if (this.sessionId) {
+      traits = {
+        ...traits,
+        sessionId: this.sessionId,
       };
     }
 
