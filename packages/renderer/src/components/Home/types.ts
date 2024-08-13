@@ -19,6 +19,7 @@ export interface GithubRelease {
 }
 
 export enum AppState {
+  Fetching,
   Downloading,
   Downloaded,
   Installing,

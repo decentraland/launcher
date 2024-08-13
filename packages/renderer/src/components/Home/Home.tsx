@@ -61,7 +61,7 @@ async function getLatestRelease(version?: string, isPrerelease?: boolean): Promi
     throw new Error('No asset found for your platform');
   }
 
-  throw new Error('Failed to fetch latest release: ' + JSON.stringify(resp));
+  throw new Error('Failed to fetch latest release');
 }
 
 export const Home: React.FC = memo(() => {
@@ -72,9 +72,14 @@ export const Home: React.FC = memo(() => {
   const [isUpdated, setIsUpdated] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | undefined>(undefined);
   const [downloadingProgress, setDownloadingProgress] = useState(0);
+  const [fetchRetry, setFetchRetry] = useState<boolean>(false);
   const [downloadRetry, setDownloadRetry] = useState(0);
   const [installRetry, setInstallRetry] = useState(0);
   const [error, setError] = useState<string | undefined>(undefined);
+
+  const handleRetryFetchAssets = useCallback(() => {
+    setFetchRetry(true);
+  }, []);
 
   const handleRetryInstall = useCallback(
     (manualRetry: boolean = false) => {
@@ -163,9 +168,8 @@ export const Home: React.FC = memo(() => {
   useEffect(() => {
     const fetchReleaseData = async () => {
       if (!initialized.current) {
-        initialized.current = true;
-
         try {
+          setState(AppState.Fetching);
           const { browser_download_url: url, version } = await getLatestRelease(getVersion(), getIsPrerelease());
           setDownloadUrl(url);
           const _isInstalled = await isExplorerInstalled();
@@ -182,16 +186,20 @@ export const Home: React.FC = memo(() => {
             return;
           }
           setIsUpdated(true);
+          initialized.current = true;
         } catch (error) {
           const errorMessage = getErrorMessage(error);
           setError(getErrorMessage(errorMessage));
           log.error('[Renderer][Home][GetLatestRelease]', errorMessage);
+          initialized.current = false;
+        } finally {
+          setFetchRetry(false);
         }
       }
     };
 
     fetchReleaseData();
-  }, []);
+  }, [fetchRetry]);
 
   const renderDownloadStep = useCallback(() => {
     const isUpdating = state === AppState.Installing && isInstalled && !isUpdated;
@@ -236,21 +244,37 @@ export const Home: React.FC = memo(() => {
   }, []);
 
   const renderError = useCallback(() => {
+    const isFetching = state === AppState.Fetching;
     const isDownloading = state === AppState.Downloading;
     const isInstalling = state === AppState.Installing;
     const isRetrying = (isDownloading && downloadRetry < 5) || (isInstalling && installRetry < 5);
+    const shouldRetry = isFetching || !isRetrying;
 
-    if (!isRetrying) {
+    if (shouldRetry) {
       return (
         <Box>
           <Typography variant="h4" align="center">
-            {isDownloading ? 'Download failed' : isInstalling ? 'Install failed' : 'Error'}
+            {isFetching
+              ? 'Fetch the latest client version failed'
+              : isDownloading
+                ? 'Download failed'
+                : isInstalling
+                  ? 'Install failed'
+                  : 'Error'}
           </Typography>
           <Typography variant="body1" align="center">
-            {isDownloading ? 'Please check your internet connection and try again.' : isInstalling ? 'Please try again.' : error}
+            {isFetching || isDownloading
+              ? 'Please check your internet connection and try again.'
+              : isInstalling
+                ? 'Please try again.'
+                : error}
           </Typography>
           <Box display="flex" justifyContent="center" marginTop={'10px'}>
-            <Button onClick={() => (isDownloading ? handleRetryDownload(true) : handleRetryInstall(true))}>Retry</Button>
+            <Button
+              onClick={() => (isFetching ? handleRetryFetchAssets() : isDownloading ? handleRetryDownload(true) : handleRetryInstall(true))}
+            >
+              Retry
+            </Button>
           </Box>
         </Box>
       );
@@ -263,7 +287,7 @@ export const Home: React.FC = memo(() => {
         </Typography>
       </Box>
     );
-  }, [error, downloadRetry, installRetry, state]);
+  }, [error, downloadRetry, installRetry, fetchRetry, state]);
 
   return (
     <Box display="flex" alignItems={'center'} justifyContent={'center'} width={'100%'}>
