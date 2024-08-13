@@ -287,7 +287,7 @@ export const Home: React.FC = memo(() => {
         </Typography>
       </Box>
     );
-  }, [error, downloadRetry, installRetry, fetchRetry, state]);
+  }, [error, downloadRetry, installRetry, state]);
 
   return (
     <Box display="flex" alignItems={'center'} justifyContent={'center'} width={'100%'}>
