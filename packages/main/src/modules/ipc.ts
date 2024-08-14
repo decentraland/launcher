@@ -172,6 +172,7 @@ export async function openApp(event: Electron.IpcMainInvokeEvent, _app: string, 
     // Forward the deeplink url to the explorer containing all the params
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const explorerArgs = [(global as any).protocol].filter(arg => !!arg);
+    log.info('[Main Window][IPC][OpenApp] Opening the Explorer', explorerArgs);
     spawn(explorerBinPath, explorerArgs, { detached: true, stdio: 'ignore' })
       .on('spawn', () => {
         event.sender.send(IPC_EVENTS.OPEN_APP, { type: IPC_EVENT_DATA_TYPE.OPEN });
