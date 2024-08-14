@@ -12,6 +12,7 @@ const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
 const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
 const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
 const EXPLORER_LATEST_VERSION_PATH = join(EXPLORER_PATH, 'latest');
+const EXPLORER_DEV_VERSION_PATH = join(EXPLORER_PATH, 'dev');
 const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
 const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
 
@@ -133,7 +134,11 @@ export function isExplorerUpdated(_event: Electron.IpcMainInvokeEvent, version: 
 }
 
 function getExplorerBinPath(version?: string): string {
-  const explorerPath = version ? join(EXPLORER_PATH, version) : EXPLORER_LATEST_VERSION_PATH;
+  const explorerPath = version
+    ? version === 'dev'
+      ? EXPLORER_DEV_VERSION_PATH
+      : join(EXPLORER_PATH, version)
+    : EXPLORER_LATEST_VERSION_PATH;
 
   if (getOSName() === PLATFORM.MAC) {
     return join(explorerPath, EXPLORER_MAC_BIN_PATH);

@@ -15,7 +15,7 @@ export function parseArgv(): Record<string, string> {
   if (process.argv.length > 2) {
     for (let i = 2; i < process.argv.length; i++) {
       const arg = process.argv[i].toLowerCase();
-      if (/--(version|prerelease)/.test(arg)) {
+      if (/--(version|prerelease|dev)/.test(arg)) {
         const [key, value] = arg.split('=');
         const cleanKey = key.replace('--', '');
         parsedArgv[cleanKey] = value ?? 'true';
@@ -44,4 +44,9 @@ export function getVersion(): string | undefined {
 export function getIsPrerelease(): boolean {
   const parsedArgv = parseArgv();
   return parsedArgv?.prerelease === 'true';
+}
+
+export function getRunDevVersion(): boolean {
+  const parsedArgv = parseArgv();
+  return parsedArgv?.dev === 'true';
 }

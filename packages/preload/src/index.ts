@@ -2,7 +2,7 @@
  * @module preload
  */
 import {
-  downloadApp,
+  downloadExplorer,
   downloadState,
   installState,
   launchExplorer,
@@ -11,9 +11,9 @@ import {
   isExplorerUpdated,
   getOSName,
 } from './ipc';
-import { getVersion, getIsPrerelease } from './argvs';
+import { getVersion, getIsPrerelease, getRunDevVersion } from './argvs';
 export {
-  downloadApp,
+  downloadExplorer,
   downloadState,
   installState,
   launchExplorer,
@@ -23,4 +23,5 @@ export {
   getOSName,
   getVersion,
   getIsPrerelease,
+  getRunDevVersion,
 };
