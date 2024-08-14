@@ -26,4 +26,6 @@ export enum AppState {
   Installed,
   Cancelled,
   Error,
+  Launching,
+  Launched,
 }

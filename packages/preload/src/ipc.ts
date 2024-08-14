@@ -1,8 +1,8 @@
 import { ipcRenderer, type IpcRendererEvent } from 'electron';
 import { IPC_EVENTS, IPC_HANDLERS, type IpcRendererEventData } from '#shared';
 
-export function downloadApp(url: string) {
-  ipcRenderer.invoke(IPC_HANDLERS.DOWNLOAD_APP, url);
+export function downloadExplorer(url: string) {
+  ipcRenderer.invoke(IPC_HANDLERS.DOWNLOAD_EXPLORER, url);
 }
 
 export function downloadState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
