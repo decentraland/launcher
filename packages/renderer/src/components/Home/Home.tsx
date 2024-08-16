@@ -3,17 +3,28 @@ import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Button, Typography } from 'decentraland-ui2';
 import log from 'electron-log/renderer';
 import {
-  downloadApp,
+  downloadExplorer,
+  downloadState,
+  installExplorer,
+  installState,
   launchExplorer,
+  launchState,
   isExplorerInstalled,
   isExplorerUpdated,
-  downloadState,
-  installState,
   getOSName,
   getVersion,
   getIsPrerelease,
+  getRunDevVersion,
+  getDownloadedFilePath,
 } from '#preload';
-import { IPC_EVENT_DATA_TYPE, IpcRendererEventDataError, IpcRendererDownloadProgressStateEventData, IpcRendererEventData } from '#shared';
+import {
+  IPC_EVENT_DATA_TYPE,
+  IpcRendererEventDataError,
+  IpcRendererDownloadProgressStateEventData,
+  IpcRendererEventData,
+  getErrorMessage,
+  IpcRendererDownloadCompletedEventData,
+} from '#shared';
 import { APPS, AppState, GithubReleaseResponse, GithubRelease } from './types';
 import { Landscape, LoadingBar } from './Home.styles';
 import LANDSCAPE_IMG from '/@assets/landscape.png';
@@ -93,33 +104,106 @@ async function getLatestRelease(version?: string, isPrerelease: boolean = false)
 
 export const Home: React.FC = memo(() => {
   const initialized = useRef(false);
-  const openedApp = useRef(false);
   const [state, setState] = useState<AppState | undefined>(undefined);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | undefined>(undefined);
   const [downloadingProgress, setDownloadingProgress] = useState(0);
-  const [fetchRetry, setFetchRetry] = useState<boolean>(false);
-  const [downloadRetry, setDownloadRetry] = useState(0);
-  const [installRetry, setInstallRetry] = useState(0);
+  const [downloadedVersion, setDownloadedVersion] = useState<string | undefined>(undefined);
+  const [retry, setRetry] = useState(0);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const handleRetryFetchAssets = useCallback(() => {
-    setFetchRetry(true);
-  }, []);
+  const shouldRunDevVersion = getRunDevVersion();
+  const customDownloadedFilePath = getDownloadedFilePath();
+  const isFetching = state === AppState.Fetching;
+  const isDownloading = state === AppState.Downloading;
+  const isInstalling = state === AppState.Installing;
+  const isLaunching = state === AppState.Launching;
 
-  const handleRetryInstall = useCallback(
+  const handleFetch = useCallback(async () => {
+    try {
+      const { browser_download_url: url, version } = await getLatestRelease(getVersion(), getIsPrerelease());
+      setDownloadUrl(url);
+      const _isInstalled = await isExplorerInstalled();
+      if (!_isInstalled) {
+        handleDownload(url);
+        return;
+      }
+      setIsInstalled(true);
+      setState(AppState.Installed);
+
+      const _isUpdated = await isExplorerUpdated(version);
+      if (!_isUpdated) {
+        handleDownload(url);
+        return;
+      }
+      setIsUpdated(true);
+      setRetry(0);
+      handleLaunch();
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      setError(getErrorMessage(errorMessage));
+      log.error('[Renderer][Home][GetLatestRelease]', errorMessage);
+      handleRetryFetch();
+    }
+  }, [setDownloadUrl, setError, setIsInstalled, setIsUpdated, setState]);
+
+  const handleRetryFetch = useCallback(
     (manualRetry: boolean = false) => {
-      if (!manualRetry && installRetry >= 5) {
+      if (!manualRetry && retry >= 5) {
         return;
       }
 
-      setInstallRetry(installRetry + 1);
+      setRetry(retry + 1);
       setTimeout(() => {
-        handleInstall();
+        handleFetch();
       }, FIVE_SECONDS);
     },
-    [installRetry],
+    [retry],
+  );
+
+  const handleLaunch = useCallback((version?: string) => {
+    const _version = shouldRunDevVersion ? 'dev' : (version ?? getVersion());
+    setTimeout(() => {
+      launchExplorer(APPS.Explorer, _version);
+      launchState(handleLaunchState);
+    }, ONE_SECOND);
+  }, []);
+
+  const handleLaunchState = useCallback(
+    (_event: IpcRendererEvent, eventData: IpcRendererEventData) => {
+      switch (eventData.type) {
+        case IPC_EVENT_DATA_TYPE.LAUNCH:
+          setState(AppState.Launching);
+          break;
+        case IPC_EVENT_DATA_TYPE.LAUNCHED:
+          setState(AppState.Launched);
+          break;
+        case IPC_EVENT_DATA_TYPE.ERROR:
+          setError((eventData as IpcRendererEventDataError).error);
+          log.error('[Renderer][Home][HandleLaunchState]', (eventData as IpcRendererEventDataError).error);
+          break;
+      }
+    },
+    [setError, setState],
+  );
+
+  const handleRetryInstall = useCallback(
+    (manualRetry: boolean = false) => {
+      if (!manualRetry && retry >= 5) {
+        return;
+      }
+
+      if (!downloadedVersion) {
+        return;
+      }
+
+      setRetry(retry + 1);
+      setTimeout(() => {
+        handleInstall(downloadedVersion);
+      }, FIVE_SECONDS);
+    },
+    [downloadedVersion, retry],
   );
 
   const handleInstallState = useCallback(
@@ -131,6 +215,8 @@ export const Home: React.FC = memo(() => {
         case IPC_EVENT_DATA_TYPE.COMPLETED:
           setState(AppState.Installed);
           setIsUpdated(true);
+          setRetry(0);
+          handleLaunch();
           break;
         case IPC_EVENT_DATA_TYPE.ERROR:
           setError((eventData as IpcRendererEventDataError).error);
@@ -139,25 +225,30 @@ export const Home: React.FC = memo(() => {
           break;
       }
     },
-    [handleRetryInstall, setError, setIsUpdated, setState],
+    [handleLaunch, handleRetryInstall, setError, setIsUpdated, setRetry, setState],
   );
 
-  const handleInstall = useCallback(() => {
+  const handleInstall = useCallback((version: string, downloadedFilePath?: string) => {
+    installExplorer(version, downloadedFilePath);
     installState(handleInstallState);
   }, []);
 
   const handleRetryDownload = useCallback(
     (manualRetry: boolean = false) => {
-      if (!manualRetry && downloadRetry >= 5) {
+      if (!downloadUrl) {
+        throw new Error('Not available downloadable release found.');
+      }
+
+      if (!manualRetry && retry >= 5) {
         return;
       }
 
-      setDownloadRetry(downloadRetry + 1);
+      setRetry(retry + 1);
       setTimeout(() => {
         handleDownload(downloadUrl);
       }, FIVE_SECONDS);
     },
-    [downloadRetry, downloadUrl],
+    [retry, downloadUrl],
   );
 
   const handleDownloadState = useCallback(
@@ -169,13 +260,23 @@ export const Home: React.FC = memo(() => {
         case IPC_EVENT_DATA_TYPE.PROGRESS:
           setDownloadingProgress((eventData as IpcRendererDownloadProgressStateEventData).progress);
           break;
-        case IPC_EVENT_DATA_TYPE.COMPLETED:
+        case IPC_EVENT_DATA_TYPE.COMPLETED: {
+          const downloadeVersion = (eventData as IpcRendererDownloadCompletedEventData).version;
           setState(AppState.Downloaded);
-          handleInstall();
+          setDownloadedVersion(downloadeVersion);
+          setRetry(0);
+          handleInstall(downloadeVersion);
           break;
-        case IPC_EVENT_DATA_TYPE.CANCELLED:
-          setState(AppState.Cancelled);
+        }
+        case IPC_EVENT_DATA_TYPE.CANCELLED: {
+          const downloadeVersion = (eventData as IpcRendererDownloadCompletedEventData)?.version;
+          if (downloadeVersion) {
+            handleLaunch(downloadeVersion);
+          } else {
+            setState(AppState.Cancelled);
+          }
           break;
+        }
         case IPC_EVENT_DATA_TYPE.ERROR:
           setError((eventData as IpcRendererEventDataError).error);
           log.error('[Renderer][Home][HandleDownloadState]', (eventData as IpcRendererEventDataError).error);
@@ -183,53 +284,42 @@ export const Home: React.FC = memo(() => {
           break;
       }
     },
-    [handleInstall, handleRetryDownload, setDownloadingProgress, setDownloadRetry, setError, setState],
+    [handleInstall, handleRetryDownload, setDownloadingProgress, setDownloadedVersion, setError, setRetry, setState],
   );
 
-  const handleDownload = useCallback((url: string | undefined) => {
-    if (!url) return;
-    downloadApp(url);
+  const handleDownload = useCallback((url: string) => {
+    downloadExplorer(url);
     downloadState(handleDownloadState);
   }, []);
 
   useEffect(() => {
     const fetchReleaseData = async () => {
       if (!initialized.current) {
-        try {
-          setState(AppState.Fetching);
-          const { browser_download_url: url, version } = await getLatestRelease(getVersion(), getIsPrerelease());
-          setDownloadUrl(url);
-          const isInstalled = await isExplorerInstalled();
-          if (!isInstalled) {
-            handleDownload(url);
-            return;
-          }
-          setIsInstalled(true);
-          setState(AppState.Installed);
-
-          const isUpdated = await isExplorerUpdated(version);
-          if (!isUpdated) {
-            handleDownload(url);
-            return;
-          }
-          setIsUpdated(true);
-          initialized.current = true;
-        } catch (error) {
-          const errorMessage = getErrorMessage(error);
-          setError(getErrorMessage(errorMessage));
-          log.error('[Renderer][Home][GetLatestRelease]', errorMessage);
-          initialized.current = false;
-        } finally {
-          setFetchRetry(false);
+        initialized.current = true;
+        // When running with the param --version=dev, skip all the checks and launch the app
+        if (shouldRunDevVersion) {
+          handleLaunch();
+        }
+        // When running with the param --downloadedfilepath={{PATH}}, skip the download step and try to install the .zip provided
+        else if (customDownloadedFilePath) {
+          handleInstall('dev', customDownloadedFilePath);
+        }
+        // Fetch the latest available version of Decentraland from the github repo releases
+        else {
+          await handleFetch();
         }
       }
     };
 
     fetchReleaseData();
-  }, [fetchRetry]);
+  }, []);
+
+  const renderFetchStep = useCallback(() => {
+    return <Typography variant="h4">Fetching the latest available version of Decentraland</Typography>;
+  }, []);
 
   const renderDownloadStep = useCallback(() => {
-    const isUpdating = state === AppState.Installing && isInstalled && !isUpdated;
+    const isUpdating = isInstalling && isInstalled && !isUpdated;
 
     return (
       <Box>
@@ -245,7 +335,7 @@ export const Home: React.FC = memo(() => {
   }, [downloadingProgress, state, isInstalled, isUpdated]);
 
   const renderInstallStep = useCallback(() => {
-    const isUpdating = state === AppState.Installing && isInstalled && !isUpdated;
+    const isUpdating = isInstalling && isInstalled && !isUpdated;
 
     return (
       <Box>
@@ -260,24 +350,28 @@ export const Home: React.FC = memo(() => {
   }, [state, isInstalled, isUpdated]);
 
   const renderLaunchStep = useCallback(() => {
-    if (openedApp.current === false) {
-      openedApp.current = true;
-      setTimeout(() => {
-        launchExplorer();
-      }, ONE_SECOND);
-    }
-
     return <Typography variant="h4">Launching Decentraland</Typography>;
   }, []);
 
-  const renderError = useCallback(() => {
-    const isFetching = state === AppState.Fetching;
-    const isDownloading = state === AppState.Downloading;
-    const isInstalling = state === AppState.Installing;
-    const isRetrying = (isDownloading && downloadRetry < 5) || (isInstalling && installRetry < 5);
-    const shouldRetry = isFetching || !isRetrying;
+  const handleOnClickRetry = useCallback(() => {
+    if (isFetching) {
+      return handleRetryFetch(true);
+    } else if (isDownloading) {
+      return handleRetryDownload(true);
+    } else if (isInstalling) {
+      return handleRetryInstall(true);
+    } else if (isLaunching) {
+      return handleLaunch();
+    } else {
+      return null;
+    }
+  }, []);
 
-    if (shouldRetry) {
+  const renderError = useCallback(() => {
+    const isRetrying = (isFetching || isDownloading || isInstalling) && retry < 5;
+    const shouldShowRetryButton = !isRetrying || isLaunching;
+
+    if (shouldShowRetryButton) {
       return (
         <Box>
           <Typography variant="h4" align="center">
@@ -297,11 +391,7 @@ export const Home: React.FC = memo(() => {
                 : error}
           </Typography>
           <Box display="flex" justifyContent="center" marginTop={'10px'}>
-            <Button
-              onClick={() => (isFetching ? handleRetryFetchAssets() : isDownloading ? handleRetryDownload(true) : handleRetryInstall(true))}
-            >
-              Retry
-            </Button>
+            <Button onClick={handleOnClickRetry}>Retry</Button>
           </Box>
         </Box>
       );
@@ -314,22 +404,24 @@ export const Home: React.FC = memo(() => {
         </Typography>
       </Box>
     );
-  }, [error, downloadRetry, installRetry, state]);
+  }, [error, retry, state]);
 
   return (
     <Box display="flex" alignItems={'center'} justifyContent={'center'} width={'100%'}>
       <Landscape>
         <img src={LANDSCAPE_IMG} />
       </Landscape>
-      {state === AppState.Downloading
-        ? renderDownloadStep()
-        : state === AppState.Installing
-          ? renderInstallStep()
-          : isUpdated
-            ? renderLaunchStep()
-            : error
-              ? renderError()
-              : null}
+      {error
+        ? renderError()
+        : isFetching
+          ? renderFetchStep()
+          : isDownloading
+            ? renderDownloadStep()
+            : isInstalling
+              ? renderInstallStep()
+              : isLaunching
+                ? renderLaunchStep()
+                : null}
     </Box>
   );
 });

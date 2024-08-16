@@ -20,12 +20,13 @@ export interface GithubRelease {
 
 export enum AppState {
   Fetching,
+  Fetched,
   Downloading,
   Downloaded,
   Installing,
   Installed,
-  Cancelled,
-  Error,
   Launching,
   Launched,
+  Cancelled,
+  Error,
 }
