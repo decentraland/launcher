@@ -38,27 +38,31 @@ async function getLatestRelease(version?: string, isPrerelease?: boolean): Promi
   if (resp.status === 200) {
     const releases: GithubRelease[] = await resp.json();
     const os = await getOSName();
+    let isMatchingOS = false;
+    let isValidVersion = false;
+    let isValidPrerelease = false;
+
     for (const release of releases) {
       for (const asset of release.assets) {
-        const isMatchingOS = asset.name.toLowerCase().includes(os.toLowerCase());
-        const isValidVersion = !version || version === release.name;
-        const isValidPrerelease = !isPrerelease || (isPrerelease && !!release.prerelease);
+        isMatchingOS = asset.name.toLowerCase().includes(os.toLowerCase());
+        isValidVersion = !version || version === release.name;
+        isValidPrerelease = !isPrerelease || (isPrerelease && !!release.prerelease);
         if (isMatchingOS && isValidVersion && isValidPrerelease) {
           return {
             browser_download_url: asset.browser_download_url,
             version: release.name,
           };
-        } else if (!isMatchingOS) {
-          throw new Error('No asset found for your platform');
-        } else if (!isValidVersion) {
-          throw new Error('No asset found for the specified version');
-        } else if (!isValidPrerelease) {
-          throw new Error('No asset found with the prerelease flag');
         }
       }
     }
 
-    throw new Error('No asset found for your platform');
+    if (!isMatchingOS) {
+      throw new Error('No asset found for your platform');
+    } else if (!isValidVersion) {
+      throw new Error('No asset found for the specified version');
+    } else if (!isValidPrerelease) {
+      throw new Error('No asset found with the prerelease flag');
+    }
   }
 
   throw new Error('Failed to fetch latest release');
