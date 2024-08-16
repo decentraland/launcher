@@ -30,42 +30,58 @@ function getErrorMessage(error: unknown): string {
     return error.message;
   }
 
+  if (error instanceof Object) {
+    if ('message' in error) {
+      return error.message as string;
+    }
+
+    if ('status' in error) {
+      return `Status: ${error.status}`;
+    }
+  }
+
   return 'An error occurred';
 }
 
 async function getLatestRelease(version?: string, isPrerelease?: boolean): Promise<GithubReleaseResponse> {
-  const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases`);
-  if (resp.status === 200) {
-    const releases: GithubRelease[] = await resp.json();
-    const os = await getOSName();
-    let isMatchingOS = false;
-    let isValidVersion = false;
-    let isValidPrerelease = false;
+  try {
+    const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases`);
+    if (resp.status === 200) {
+      const releases: GithubRelease[] = await resp.json();
+      const os = await getOSName();
+      let isMatchingOS = false;
+      let isValidVersion = false;
+      let isValidPrerelease = false;
 
-    for (const release of releases) {
-      for (const asset of release.assets) {
-        isMatchingOS = asset.name.toLowerCase().includes(os.toLowerCase());
-        isValidVersion = !version || version === release.name;
-        isValidPrerelease = !isPrerelease || (isPrerelease && !!release.prerelease);
-        if (isMatchingOS && isValidVersion && isValidPrerelease) {
-          return {
-            browser_download_url: asset.browser_download_url,
-            version: release.name,
-          };
+      for (const release of releases) {
+        for (const asset of release.assets) {
+          isMatchingOS = asset.name.toLowerCase().includes(os.toLowerCase());
+          isValidVersion = !version || version === release.name;
+          isValidPrerelease = !isPrerelease || (isPrerelease && !!release.prerelease);
+          if (isMatchingOS && isValidVersion && isValidPrerelease) {
+            return {
+              browser_download_url: asset.browser_download_url,
+              version: release.name,
+            };
+          }
         }
+      }
+
+      if (!isMatchingOS) {
+        throw new Error('No asset found for your platform');
+      } else if (!isValidVersion) {
+        throw new Error('No asset found for the specified version');
+      } else if (!isValidPrerelease) {
+        throw new Error('No asset found with the prerelease flag');
       }
     }
 
-    if (!isMatchingOS) {
-      throw new Error('No asset found for your platform');
-    } else if (!isValidVersion) {
-      throw new Error('No asset found for the specified version');
-    } else if (!isValidPrerelease) {
-      throw new Error('No asset found with the prerelease flag');
-    }
+    const _resp = await resp.json();
+    throw new Error(getErrorMessage(_resp));
+  } catch (error) {
+    log.error('[Renderer][Home][GetLatestRelease]', error);
+    throw new Error('Failed to fetch latest release');
   }
-
-  throw new Error('Failed to fetch latest release');
 }
 
 export const Home: React.FC = memo(() => {
