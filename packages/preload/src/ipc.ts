@@ -9,6 +9,10 @@ export function downloadState(cb: (event: IpcRendererEvent, state: IpcRendererEv
   return ipcRenderer.on(IPC_EVENTS.DOWNLOAD_STATE, cb);
 }
 
+export function installExplorer(version: string, downloadedFilePath?: string) {
+  ipcRenderer.invoke(IPC_HANDLERS.INSTALL_EXPLORER, version, downloadedFilePath);
+}
+
 export function installState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
   return ipcRenderer.on(IPC_EVENTS.INSTALL_STATE, cb);
 }

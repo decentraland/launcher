@@ -4,6 +4,7 @@
 import {
   downloadExplorer,
   downloadState,
+  installExplorer,
   installState,
   launchExplorer,
   launchState,
@@ -11,10 +12,11 @@ import {
   isExplorerUpdated,
   getOSName,
 } from './ipc';
-import { getVersion, getIsPrerelease, getRunDevVersion } from './argvs';
+import { getVersion, getIsPrerelease, getRunDevVersion, getDownloadedFilePath } from './argvs';
 export {
   downloadExplorer,
   downloadState,
+  installExplorer,
   installState,
   launchExplorer,
   launchState,
@@ -24,4 +26,5 @@ export {
   getVersion,
   getIsPrerelease,
   getRunDevVersion,
+  getDownloadedFilePath,
 };

@@ -1,5 +1,6 @@
 export enum IPC_HANDLERS {
   DOWNLOAD_EXPLORER = 'download-explorer',
+  INSTALL_EXPLORER = 'install-explorer',
   IS_EXPLORER_INSTALLED = 'is-explorer-installed',
   IS_EXPLORER_UPDATED = 'is-explorer-updated',
   LAUNCH_EXPLORER = 'launch-explorer',
@@ -33,6 +34,11 @@ export interface IpcRendererEventData {
 export interface IpcRendererDownloadProgressStateEventData extends IpcRendererEventData {
   type: IPC_EVENT_DATA_TYPE.PROGRESS;
   progress: number;
+}
+
+export interface IpcRendererDownloadCompletedEventData extends IpcRendererEventData {
+  type: IPC_EVENT_DATA_TYPE.COMPLETED;
+  version: string;
 }
 
 export interface IpcRendererEventDataError extends IpcRendererEventData {
