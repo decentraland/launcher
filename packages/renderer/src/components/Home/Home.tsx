@@ -30,38 +30,58 @@ function getErrorMessage(error: unknown): string {
     return error.message;
   }
 
+  if (error instanceof Object) {
+    if ('message' in error) {
+      return error.message as string;
+    }
+
+    if ('status' in error) {
+      return `Status: ${error.status}`;
+    }
+  }
+
   return 'An error occurred';
 }
 
 async function getLatestRelease(version?: string, isPrerelease?: boolean): Promise<GithubReleaseResponse> {
-  const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases`);
-  if (resp.status === 200) {
-    const releases: GithubRelease[] = await resp.json();
-    const os = await getOSName();
-    for (const release of releases) {
-      for (const asset of release.assets) {
-        const isMatchingOS = asset.name.toLowerCase().includes(os.toLowerCase());
-        const isValidVersion = !version || version === release.name;
-        const isValidPrerelease = !isPrerelease || (isPrerelease && !!release.prerelease);
-        if (isMatchingOS && isValidVersion && isValidPrerelease) {
-          return {
-            browser_download_url: asset.browser_download_url,
-            version: release.name,
-          };
-        } else if (!isMatchingOS) {
-          throw new Error('No asset found for your platform');
-        } else if (!isValidVersion) {
-          throw new Error('No asset found for the specified version');
-        } else if (!isValidPrerelease) {
-          throw new Error('No asset found with the prerelease flag');
+  try {
+    const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases`);
+    if (resp.status === 200) {
+      const releases: GithubRelease[] = await resp.json();
+      const os = await getOSName();
+      let isMatchingOS = false;
+      let isValidVersion = false;
+      let isValidPrerelease = false;
+
+      for (const release of releases) {
+        for (const asset of release.assets) {
+          isMatchingOS = asset.name.toLowerCase().includes(os.toLowerCase());
+          isValidVersion = !version || version === release.name;
+          isValidPrerelease = !isPrerelease || (isPrerelease && !!release.prerelease);
+          if (isMatchingOS && isValidVersion && isValidPrerelease) {
+            return {
+              browser_download_url: asset.browser_download_url,
+              version: release.name,
+            };
+          }
         }
+      }
+
+      if (!isMatchingOS) {
+        throw new Error('No asset found for your platform');
+      } else if (!isValidVersion) {
+        throw new Error('No asset found for the specified version');
+      } else if (!isValidPrerelease) {
+        throw new Error('No asset found with the prerelease flag');
       }
     }
 
-    throw new Error('No asset found for your platform');
+    const _resp = await resp.json();
+    throw new Error(getErrorMessage(_resp));
+  } catch (error) {
+    log.error('[Renderer][Home][GetLatestRelease]', error);
+    throw new Error('Failed to fetch latest release');
   }
-
-  throw new Error('Failed to fetch latest release: ' + JSON.stringify(resp));
 }
 
 export const Home: React.FC = memo(() => {
@@ -72,9 +92,14 @@ export const Home: React.FC = memo(() => {
   const [isUpdated, setIsUpdated] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | undefined>(undefined);
   const [downloadingProgress, setDownloadingProgress] = useState(0);
+  const [fetchRetry, setFetchRetry] = useState<boolean>(false);
   const [downloadRetry, setDownloadRetry] = useState(0);
   const [installRetry, setInstallRetry] = useState(0);
   const [error, setError] = useState<string | undefined>(undefined);
+
+  const handleRetryFetchAssets = useCallback(() => {
+    setFetchRetry(true);
+  }, []);
 
   const handleRetryInstall = useCallback(
     (manualRetry: boolean = false) => {
@@ -163,9 +188,8 @@ export const Home: React.FC = memo(() => {
   useEffect(() => {
     const fetchReleaseData = async () => {
       if (!initialized.current) {
-        initialized.current = true;
-
         try {
+          setState(AppState.Fetching);
           const { browser_download_url: url, version } = await getLatestRelease(getVersion(), getIsPrerelease());
           setDownloadUrl(url);
           const _isInstalled = await isExplorerInstalled();
@@ -182,16 +206,20 @@ export const Home: React.FC = memo(() => {
             return;
           }
           setIsUpdated(true);
+          initialized.current = true;
         } catch (error) {
           const errorMessage = getErrorMessage(error);
           setError(getErrorMessage(errorMessage));
           log.error('[Renderer][Home][GetLatestRelease]', errorMessage);
+          initialized.current = false;
+        } finally {
+          setFetchRetry(false);
         }
       }
     };
 
     fetchReleaseData();
-  }, []);
+  }, [fetchRetry]);
 
   const renderDownloadStep = useCallback(() => {
     const isUpdating = state === AppState.Installing && isInstalled && !isUpdated;
@@ -236,21 +264,37 @@ export const Home: React.FC = memo(() => {
   }, []);
 
   const renderError = useCallback(() => {
+    const isFetching = state === AppState.Fetching;
     const isDownloading = state === AppState.Downloading;
     const isInstalling = state === AppState.Installing;
     const isRetrying = (isDownloading && downloadRetry < 5) || (isInstalling && installRetry < 5);
+    const shouldRetry = isFetching || !isRetrying;
 
-    if (!isRetrying) {
+    if (shouldRetry) {
       return (
         <Box>
           <Typography variant="h4" align="center">
-            {isDownloading ? 'Download failed' : isInstalling ? 'Install failed' : 'Error'}
+            {isFetching
+              ? 'Fetch the latest client version failed'
+              : isDownloading
+                ? 'Download failed'
+                : isInstalling
+                  ? 'Install failed'
+                  : 'Error'}
           </Typography>
           <Typography variant="body1" align="center">
-            {isDownloading ? 'Please check your internet connection and try again.' : isInstalling ? 'Please try again.' : error}
+            {isFetching || isDownloading
+              ? 'Please check your internet connection and try again.'
+              : isInstalling
+                ? 'Please try again.'
+                : error}
           </Typography>
           <Box display="flex" justifyContent="center" marginTop={'10px'}>
-            <Button onClick={() => (isDownloading ? handleRetryDownload(true) : handleRetryInstall(true))}>Retry</Button>
+            <Button
+              onClick={() => (isFetching ? handleRetryFetchAssets() : isDownloading ? handleRetryDownload(true) : handleRetryInstall(true))}
+            >
+              Retry
+            </Button>
           </Box>
         </Box>
       );
