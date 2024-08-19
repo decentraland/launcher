@@ -4,7 +4,7 @@ import { Box, Button, Typography } from 'decentraland-ui2';
 import log from 'electron-log/renderer';
 import {
   downloadApp,
-  openApp,
+  launchExplorer,
   isExplorerInstalled,
   isExplorerUpdated,
   downloadState,
@@ -256,7 +256,7 @@ export const Home: React.FC = memo(() => {
     if (openedApp.current === false) {
       openedApp.current = true;
       setTimeout(() => {
-        openApp(APPS.Explorer);
+        launchExplorer();
       }, ONE_SECOND);
     }
 

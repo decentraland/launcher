@@ -2,15 +2,14 @@ export enum IPC_HANDLERS {
   DOWNLOAD_APP = 'download-app',
   IS_EXPLORER_INSTALLED = 'is-explorer-installed',
   IS_EXPLORER_UPDATED = 'is-explorer-updated',
-  OPEN_APP = 'open-app',
-  MINIMIZE_WINDOW = 'minimize-window',
+  LAUNCH_EXPLORER = 'launch-explorer',
   GET_OS_NAME = 'get-os-name',
 }
 
 export enum IPC_EVENTS {
   DOWNLOAD_STATE = 'downloadState',
   INSTALL_STATE = 'installState',
-  OPEN_APP = 'openApp',
+  LAUNCH_EXPLORER = 'launchExplorer',
 }
 
 export enum IPC_EVENT_DATA_TYPE {
@@ -21,6 +20,8 @@ export enum IPC_EVENT_DATA_TYPE {
   ERROR = 'ERROR',
   OPEN = 'OPEN',
   CLOSE = 'CLOSE',
+  LAUNCH = 'LAUNCH',
+  LAUNCHED = 'LAUNCHED',
 }
 
 export interface IpcRendererEventData {

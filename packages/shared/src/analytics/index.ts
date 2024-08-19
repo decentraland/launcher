@@ -15,9 +15,13 @@ export class Analytics {
   private userId: string;
   private appId: string = APP_ID;
   private sessionId: string = uuid();
+  private os: string;
+  private launcherVersion: string;
 
-  constructor(userId: string) {
+  constructor(userId: string, os: string, launcherVersion: string) {
     this.userId = userId;
+    this.os = os;
+    this.launcherVersion = launcherVersion;
 
     if (!import.meta.env.PROD) {
       return;
@@ -37,8 +41,16 @@ export class Analytics {
     Analytics.instance = this;
   }
 
-  getAnalytics() {
-    return this.analytics;
+  getAnalytics(): SegmentAnalytics {
+    return this.analytics as SegmentAnalytics;
+  }
+
+  async closeAndFlush(): Promise<void> {
+    if (this.analytics instanceof SegmentAnalytics) {
+      return this.analytics.closeAndFlush({ timeout: 20000 });
+    }
+
+    return Promise.resolve();
   }
 
   getTraits() {
@@ -58,10 +70,24 @@ export class Analytics {
       };
     }
 
+    if (this.os) {
+      traits = {
+        ...traits,
+        os: this.os,
+      };
+    }
+
+    if (this.launcherVersion) {
+      traits = {
+        ...traits,
+        launcherVersion: this.launcherVersion,
+      };
+    }
+
     return traits;
   }
 
-  track<T extends keyof ANALYTICS_EVENTS>(eventName: T, eventProps: ANALYTICS_EVENTS[T]) {
+  track<T extends keyof ANALYTICS_EVENTS>(eventName: T, eventProps: ANALYTICS_EVENTS[T] | undefined = undefined) {
     const trackInfo = {
       event: eventName,
       userId: this.userId,
@@ -71,6 +97,6 @@ export class Analytics {
       },
     };
 
-    this.analytics.track(trackInfo);
+    this.getAnalytics().track(trackInfo);
   }
 }
