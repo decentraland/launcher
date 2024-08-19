@@ -23,16 +23,12 @@ export async function isExplorerUpdated(version: string): Promise<boolean> {
   return resp;
 }
 
-export function openApp(app: string, version?: string) {
-  ipcRenderer.invoke(IPC_HANDLERS.OPEN_APP, app, version);
+export function launchExplorer(version?: string) {
+  ipcRenderer.invoke(IPC_HANDLERS.LAUNCH_EXPLORER, version);
 }
 
-export function openAppState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
-  return ipcRenderer.on(IPC_EVENTS.OPEN_APP, cb);
-}
-
-export function minimize() {
-  ipcRenderer.invoke(IPC_HANDLERS.MINIMIZE_WINDOW);
+export function launchState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
+  return ipcRenderer.on(IPC_EVENTS.LAUNCH_EXPLORER, cb);
 }
 
 export async function getOSName(): Promise<string> {
