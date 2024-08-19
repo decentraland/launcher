@@ -1,10 +1,10 @@
 import { join } from 'path';
 import fs from 'node:fs';
 import { spawn } from 'child_process';
-import { app, BrowserWindow } from 'electron';
+import { app, ipcMain, BrowserWindow } from 'electron';
 import { download } from 'electron-dl';
 import log from 'electron-log/main';
-import { Analytics, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT } from '#shared';
+import { Analytics, IPC_HANDLERS, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT } from '#shared';
 import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM, getUserId } from './helpers';
 
 const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
@@ -14,7 +14,7 @@ const EXPLORER_LATEST_VERSION_PATH = join(EXPLORER_PATH, 'latest');
 const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
 const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
 
-const analytics = new Analytics(getUserId());
+const analytics = new Analytics(getUserId(), getOSName(), app.getVersion());
 
 export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: string) {
   try {
@@ -52,7 +52,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
             type: IPC_EVENT_DATA_TYPE.START,
             progress: 0,
           });
-          analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION, { version, os: getOSName() });
+          analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION, { version });
         },
         onProgress: progress => {
           event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
@@ -64,7 +64,7 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
           try {
             event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.COMPLETED });
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.START });
-            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_START, { version, os: getOSName() });
+            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_START, { version });
 
             await decompressFile(file.path, branchPath);
 
@@ -88,11 +88,11 @@ export async function downloadApp(event: Electron.IpcMainInvokeEvent, url: strin
             fs.writeFileSync(EXPLORER_VERSION_PATH, JSON.stringify(versionData));
 
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.COMPLETED });
-            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_SUCCESS, { version, os: getOSName() });
+            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_SUCCESS, { version });
           } catch (error) {
             log.error('[Main Window][IPC][DownloadApp] Failed to install app:', error);
             event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
-            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_ERROR, { version, os: getOSName() });
+            analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_ERROR, { version });
           } finally {
             if (fs.existsSync(file.path)) {
               fs.rmSync(file.path);
@@ -142,26 +142,24 @@ function getExplorerBinPath(version?: string): string {
   }
 }
 
-export function openApp(event: Electron.IpcMainInvokeEvent, _app: string, version?: string) {
+export function launchExplorer(event: Electron.IpcMainInvokeEvent, version?: string) {
+  const versionData = JSON.parse(fs.readFileSync(EXPLORER_VERSION_PATH, 'utf8'));
+
   try {
-    log.info('[Main Window][IPC][OpenApp] Opening App');
+    log.info('[Main Window][IPC][LaunchExplorer] Launching Explorer');
+    event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, { type: IPC_EVENT_DATA_TYPE.LAUNCH });
+    analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_START, { version: versionData.version });
 
     const explorerBinPath = getExplorerBinPath(version);
 
     if (!fs.existsSync(explorerBinPath)) {
-      if (version) {
-        log.error('[Main Window][IPC][OpenApp] The explorer version specified is not installed');
-        event.sender.send(IPC_EVENTS.OPEN_APP, {
-          type: IPC_EVENT_DATA_TYPE.ERROR,
-          error: `The explorer version ${version} is not installed.`,
-        });
-      } else {
-        log.error('[Main Window][IPC][OpenApp] The explorer is not installed');
-        event.sender.send(IPC_EVENTS.OPEN_APP, {
-          type: IPC_EVENT_DATA_TYPE.ERROR,
-          error: 'The explorer is not installed.',
-        });
-      }
+      const errorMessage = version ? `The explorer version specified: ${version} is not installed.` : 'The explorer is not installed.';
+      log.error(`[Main Window][IPC][LaunchExplorer] ${errorMessage}`);
+      event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, {
+        type: IPC_EVENT_DATA_TYPE.ERROR,
+        error: errorMessage,
+      });
+      analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_ERROR, { version: versionData.version });
       return;
     }
 
@@ -170,31 +168,46 @@ export function openApp(event: Electron.IpcMainInvokeEvent, _app: string, versio
 
     spawn(explorerBinPath, { detached: true, stdio: 'ignore' })
       .on('spawn', () => {
-        event.sender.send(IPC_EVENTS.OPEN_APP, { type: IPC_EVENT_DATA_TYPE.OPEN });
-        BrowserWindow.getAllWindows()
-          .find(w => !w.isDestroyed())
-          ?.close();
+        event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, { type: IPC_EVENT_DATA_TYPE.LAUNCHED });
+        analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_SUCCESS, { version: versionData.version });
+        closeWindow();
       })
       .on('close', () => {
-        app.quit();
+        closeWindow();
       })
       .on('error', error => {
         log.error('[Main Window][IPC][OpenApp] Failed to open app:', error);
-        event.sender.send(IPC_EVENTS.OPEN_APP, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
+        event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
+        analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_ERROR, { version: versionData.version });
       });
   } catch (error) {
-    log.error('[Main Window][IPC][OpenApp] Failed to open app:', error);
-    event.sender.send(IPC_EVENTS.OPEN_APP, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
+    log.error('[Main Window][IPC][LaunchExplorer] Failed to open app:', error);
+    event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, {
+      type: IPC_EVENT_DATA_TYPE.ERROR,
+      error,
+    });
+    analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_ERROR, { version: versionData.version });
   }
 }
 
-export function minimizeWindow(_event: Electron.IpcMainInvokeEvent) {
-  try {
-    const win = BrowserWindow.getFocusedWindow();
-    if (!win) return;
+export function initIpcHandlers() {
+  analytics.track(ANALYTICS_EVENT.LAUNCHER_OPEN);
 
-    win.minimize();
-  } catch (error) {
-    log.error('[Main Window][IPC][MinimizeWindow] Failed to minimize window:', error);
-  }
+  ipcMain.handle(IPC_HANDLERS.DOWNLOAD_APP, downloadApp);
+  ipcMain.handle(IPC_HANDLERS.LAUNCH_EXPLORER, launchExplorer);
+  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_INSTALLED, isExplorerInstalled);
+  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
+  ipcMain.handle(IPC_HANDLERS.GET_OS_NAME, getOSName);
+
+  app.on('before-quit', async () => {
+    closeWindow();
+  });
+}
+
+async function closeWindow() {
+  analytics.track(ANALYTICS_EVENT.LAUNCHER_CLOSE);
+  await analytics.closeAndFlush();
+  BrowserWindow.getAllWindows()
+    .find(w => !w.isDestroyed())
+    ?.close();
 }

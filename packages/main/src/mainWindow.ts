@@ -1,9 +1,8 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { app, BrowserWindow, ipcMain } from 'electron';
-import { IPC_HANDLERS } from '#shared';
-import { downloadApp, openApp, minimizeWindow, isExplorerInstalled, isExplorerUpdated } from './ipc';
-import { getOSName, getAppIcon, getAdditionalArguments } from './helpers';
+import { app, BrowserWindow } from 'electron';
+import { initIpcHandlers } from './ipc';
+import { getAppIcon, getAdditionalArguments } from './helpers';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({
@@ -65,12 +64,7 @@ async function createWindow() {
     await browserWindow.loadFile(fileURLToPath(new URL('./../../renderer/dist/index.html', import.meta.url)));
   }
 
-  ipcMain.handle(IPC_HANDLERS.DOWNLOAD_APP, downloadApp);
-  ipcMain.handle(IPC_HANDLERS.OPEN_APP, openApp);
-  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_INSTALLED, isExplorerInstalled);
-  ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
-  ipcMain.handle(IPC_HANDLERS.MINIMIZE_WINDOW, minimizeWindow);
-  ipcMain.handle(IPC_HANDLERS.GET_OS_NAME, getOSName);
+  initIpcHandlers();
 
   return browserWindow;
 }
