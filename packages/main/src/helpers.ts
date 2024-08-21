@@ -3,6 +3,10 @@ import fs from 'node:fs';
 import { app } from 'electron';
 import JSZip from 'jszip';
 
+export function getAppVersion(): string {
+  return app.getVersion();
+}
+
 export enum PLATFORM {
   MAC = 'mac',
   LINUX = 'linux',
