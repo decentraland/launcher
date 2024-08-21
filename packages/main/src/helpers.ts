@@ -2,6 +2,7 @@ import { dirname, join } from 'node:path';
 import fs from 'node:fs';
 import { app } from 'electron';
 import JSZip from 'jszip';
+import semver from 'semver';
 
 export function getAppVersion(): string {
   return app.getVersion();
@@ -88,7 +89,7 @@ export async function decompressFile(sourcePath: string, destinationPath: string
   }
 }
 
-export function isAppInstalled(appPath: string): boolean {
+export function isAppInstalled(appPath: string, version: string): boolean {
   if (!fs.existsSync(appPath)) {
     return false;
   }
@@ -97,11 +98,13 @@ export function isAppInstalled(appPath: string): boolean {
     return false;
   }
 
-  return true;
+  const versionFile = join(appPath, 'version.json');
+  const versionData = JSON.parse(fs.readFileSync(versionFile, 'utf8'));
+  return versionData[version] !== undefined;
 }
 
 export function isAppUpdated(appPath: string, version: string): boolean {
-  if (!isAppInstalled(appPath)) {
+  if (!isAppInstalled(appPath, version)) {
     return false;
   }
 
@@ -128,4 +131,9 @@ export function getAdditionalArguments(): string[] {
   }
 
   return args;
+}
+
+export function compareVersions(version1: string, version2: string) {
+  const result = semver.compare(version1, version2);
+  return result > 0;
 }

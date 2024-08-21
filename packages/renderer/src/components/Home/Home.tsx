@@ -32,28 +32,6 @@ import LANDSCAPE_IMG from '/@assets/landscape.png';
 const ONE_SECOND = 1000;
 const FIVE_SECONDS = 5 * ONE_SECOND;
 
-function getErrorMessage(error: unknown): string {
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (error instanceof Object) {
-    if ('message' in error) {
-      return error.message as string;
-    }
-
-    if ('status' in error) {
-      return `Status: ${error.status}`;
-    }
-  }
-
-  return 'An error occurred';
-}
-
 /**
  * Retrieves the latest release information from the GitHub API.
  * @param version - Optional. The specific version to retrieve. If not provided, retrieves the latest version.
@@ -124,7 +102,7 @@ export const Home: React.FC = memo(() => {
     try {
       const { browser_download_url: url, version } = await getLatestRelease(getVersion(), getIsPrerelease());
       setDownloadUrl(url);
-      const _isInstalled = await isExplorerInstalled();
+      const _isInstalled = await isExplorerInstalled(version);
       if (!_isInstalled) {
         handleDownload(url);
         return;
@@ -163,9 +141,10 @@ export const Home: React.FC = memo(() => {
   );
 
   const handleLaunch = useCallback((version?: string) => {
-    const _version = shouldRunDevVersion ? 'dev' : (version ?? getVersion());
+    const _version = shouldRunDevVersion ? 'dev' : version;
+    setState(AppState.Launching);
     setTimeout(() => {
-      launchExplorer(APPS.Explorer, _version);
+      launchExplorer(_version);
       launchState(handleLaunchState);
     }, ONE_SECOND);
   }, []);
@@ -173,9 +152,6 @@ export const Home: React.FC = memo(() => {
   const handleLaunchState = useCallback(
     (_event: IpcRendererEvent, eventData: IpcRendererEventData) => {
       switch (eventData.type) {
-        case IPC_EVENT_DATA_TYPE.LAUNCH:
-          setState(AppState.Launching);
-          break;
         case IPC_EVENT_DATA_TYPE.LAUNCHED:
           setState(AppState.Launched);
           break;
@@ -296,13 +272,13 @@ export const Home: React.FC = memo(() => {
     const fetchReleaseData = async () => {
       if (!initialized.current) {
         initialized.current = true;
-        // When running with the param --version=dev, skip all the checks and launch the app
-        if (shouldRunDevVersion) {
-          handleLaunch();
-        }
         // When running with the param --downloadedfilepath={{PATH}}, skip the download step and try to install the .zip provided
-        else if (customDownloadedFilePath) {
+        if (customDownloadedFilePath) {
           handleInstall('dev', customDownloadedFilePath);
+        }
+        // When running with the param --version=dev, skip all the checks and launch the app
+        else if (shouldRunDevVersion) {
+          handleLaunch();
         }
         // Fetch the latest available version of Decentraland from the github repo releases
         else {
@@ -365,7 +341,7 @@ export const Home: React.FC = memo(() => {
     } else {
       return null;
     }
-  }, []);
+  }, [state]);
 
   const renderError = useCallback(() => {
     const isRetrying = (isFetching || isDownloading || isInstalling) && retry < 5;
