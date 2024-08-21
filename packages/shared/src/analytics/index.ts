@@ -12,15 +12,15 @@ const noopAnalytics = {
 export class Analytics {
   private static instance: Analytics | null = null;
   private analytics: SegmentAnalytics | { track(): void } = noopAnalytics;
-  private userId: string;
+  private anonymousId: string;
   private appId: string = APP_ID;
   private sessionId: string = uuid();
   private os: string;
   private launcherVersion: string;
   private ipAddress?: string;
 
-  constructor(userId: string, os: string, launcherVersion: string, ipAddress?: string) {
-    this.userId = userId;
+  constructor(anonymousId: string, os: string, launcherVersion: string, ipAddress?: string) {
+    this.anonymousId = anonymousId;
     this.os = os;
     this.launcherVersion = launcherVersion;
     this.ipAddress = ipAddress;
@@ -91,10 +91,18 @@ export class Analytics {
     return properties;
   }
 
+  getAnonymousId() {
+    return this.anonymousId;
+  }
+
+  getSessionId() {
+    return this.sessionId;
+  }
+
   track<T extends keyof ANALYTICS_EVENTS>(eventName: T, eventProps: ANALYTICS_EVENTS[T] | undefined = undefined) {
     const trackInfo = {
       event: eventName,
-      anonymousId: this.userId,
+      anonymousId: this.anonymousId,
       properties: {
         ...this.getProperties(),
         ...eventProps,
