@@ -17,11 +17,13 @@ export class Analytics {
   private sessionId: string = uuid();
   private os: string;
   private launcherVersion: string;
+  private ipAddress?: string;
 
-  constructor(userId: string, os: string, launcherVersion: string) {
+  constructor(userId: string, os: string, launcherVersion: string, ipAddress?: string) {
     this.userId = userId;
     this.os = os;
     this.launcherVersion = launcherVersion;
+    this.ipAddress = ipAddress;
 
     if (!import.meta.env.PROD) {
       return;
@@ -32,11 +34,6 @@ export class Analytics {
     }
 
     this.analytics = new SegmentAnalytics({ writeKey: SEGMENT_KEY });
-
-    this.analytics.identify({
-      userId: this.userId,
-      traits: this.getTraits(),
-    });
 
     Analytics.instance = this;
   }
@@ -53,46 +50,53 @@ export class Analytics {
     return Promise.resolve();
   }
 
-  getTraits() {
-    let traits: Record<string, unknown> = {};
+  getProperties() {
+    let properties: Record<string, unknown> = {};
 
     if (this.appId) {
-      traits = {
-        ...traits,
+      properties = {
+        ...properties,
         appId: this.appId,
       };
     }
 
     if (this.sessionId) {
-      traits = {
-        ...traits,
+      properties = {
+        ...properties,
         sessionId: this.sessionId,
       };
     }
 
     if (this.os) {
-      traits = {
-        ...traits,
+      properties = {
+        ...properties,
         os: this.os,
       };
     }
 
     if (this.launcherVersion) {
-      traits = {
-        ...traits,
+      properties = {
+        ...properties,
         launcherVersion: this.launcherVersion,
       };
     }
 
-    return traits;
+    if (this.ipAddress) {
+      properties = {
+        ...properties,
+        ip: this.ipAddress,
+      };
+    }
+
+    return properties;
   }
 
   track<T extends keyof ANALYTICS_EVENTS>(eventName: T, eventProps: ANALYTICS_EVENTS[T] | undefined = undefined) {
     const trackInfo = {
       event: eventName,
-      userId: this.userId,
+      anonymousId: this.userId,
       properties: {
-        ...this.getTraits(),
+        ...this.getProperties(),
         ...eventProps,
       },
     };
