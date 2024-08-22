@@ -188,13 +188,14 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
     // Validates the explorer binary is executable
     fs.accessSync(explorerBinPath, fs.constants.X_OK);
 
-    // Forward the deeplink url to the explorer containing all the params
-    const launcherParams = `launcher_anonymous_id=${analytics.getAnonymousId()}&session_id=${analytics.getAnonymousId()}`;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let explorerProtocol = (global as any).protocol ?? 'decentraland://?';
-    explorerProtocol += `&${launcherParams}`;
-    log.info('[Main Window][IPC][LaunchExplorer] Opening the Explorer', explorerProtocol);
-    spawn(explorerBinPath, [explorerProtocol], { detached: true, stdio: 'ignore' })
+    const explorerParams = [
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).protocol,
+      `--launcher_anonymous_id ${analytics.getAnonymousId()}`,
+      `--session_id ${analytics.getSessionId()}`,
+    ].filter(arg => !!arg);
+    log.info('[Main Window][IPC][LaunchExplorer] Opening the Explorer', explorerParams);
+    spawn(explorerBinPath, explorerParams, { detached: true, stdio: 'ignore' })
       .on('spawn', async () => {
         event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, { type: IPC_EVENT_DATA_TYPE.LAUNCHED });
         await analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_SUCCESS, { version: versionData.version });
