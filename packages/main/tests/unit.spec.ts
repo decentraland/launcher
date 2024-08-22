@@ -1,8 +1,8 @@
-import type { MockedClass, MockedObject } from 'vitest';
 import { beforeEach, expect, test, vi } from 'vitest';
-import { restoreOrCreateWindow } from '../src/mainWindow';
-
+import type { MockedClass } from 'vitest';
 import { BrowserWindow } from 'electron';
+
+import { restoreOrCreateWindow } from '../src/mainWindow';
 
 /**
  * Mock real electron BrowserWindow API
@@ -21,14 +21,30 @@ vi.mock('electron', () => {
   bw.prototype.isMinimized = vi.fn();
   bw.prototype.focus = vi.fn();
   bw.prototype.restore = vi.fn();
+  bw.prototype.setMenuBarVisibility = vi.fn();
 
-  const app: Pick<Electron.App, 'getAppPath'> = {
+  const app: Pick<Electron.App, 'getAppPath' | 'getPath' | 'getVersion' | 'on'> = {
     getAppPath(): string {
       return '';
     },
+    getPath(): string {
+      return '';
+    },
+    getVersion(): string {
+      return '1.0.0';
+    },
+    on: vi.fn(),
   };
 
-  return { BrowserWindow: bw, app };
+  const ipcMain: Pick<Electron.IpcMain, 'handle'> = {
+    handle: vi.fn(),
+  };
+
+  return { BrowserWindow: bw, app, ipcMain };
+});
+
+vi.mock('electron-dl', () => {
+  return { download: vi.fn() };
 });
 
 beforeEach(() => {

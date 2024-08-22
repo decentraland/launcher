@@ -21,10 +21,10 @@
     "compile": "cross-env MODE=production npm run build && electron-builder build --config electron-builder.yml --dir",
     "compile:installer": "cross-env MODE=production npm run build && electron-builder build --config electron-builder.yml",
     "test": "npm run test:main && npm run test:preload && npm run test:renderer && npm run test:e2e",
-    "test:e2e": "npm run build && jest",
-    "test:main": "jest run --runTestsByPath packages/main --passWithNoTests",
-    "test:preload": "jest run --runTestsByPath packages/preload --passWithNoTests",
-    "test:renderer": "jest run --runTestsByPath packages/renderer --passWithNoTests",
+    "test:e2e": "npm run build && vitest run",
+    "test:main": "vitest run -r packages/main --passWithNoTests",
+    "test:preload": "vitest run -r packages/preload --passWithNoTests",
+    "test:renderer": "vitest run -r packages/renderer --passWithNoTests",
     "watch": "node scripts/watch.js",
     "start": "npm run watch",
     "lint": "eslint . --ext js,mjs,cjs,ts,tsx",
@@ -64,7 +64,7 @@
     "typescript": "5.5.2",
     "unplugin-auto-expose": "0.3.0",
     "vite": "5.3.1",
-    "vitest": "1.6.0"
+    "vitest": "^2.0.5"
   },
   "dependencies": {
     "@segment/analytics-node": "^2.1.2",
@@ -75,6 +75,7 @@
     "jszip": "^3.10.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "semver": "^7.6.3",
     "uuid": "^10.0.0"
   }
 }

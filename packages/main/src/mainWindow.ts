@@ -1,10 +1,12 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow } from 'electron';
-import { initIpcHandlers } from './ipc';
+import { initIpcHandlers } from './modules/ipc';
 import { getAppIcon, getAdditionalArguments } from './helpers';
 
 async function createWindow() {
+  await initIpcHandlers();
+
   const browserWindow = new BrowserWindow({
     show: false, // Use the 'ready-to-show' event to show the instantiated BrowserWindow.
     width: 1006, // 990+16 border
@@ -63,8 +65,6 @@ async function createWindow() {
      */
     await browserWindow.loadFile(fileURLToPath(new URL('./../../renderer/dist/index.html', import.meta.url)));
   }
-
-  initIpcHandlers();
 
   return browserWindow;
 }

@@ -1,13 +1,17 @@
 import { app } from 'electron';
 import updater from 'electron-updater';
 import log from 'electron-log/main';
-import { restoreOrCreateWindow } from '/@/mainWindow';
+import { initProtocol } from './modules/protocol';
+import { restoreOrCreateWindow } from './mainWindow';
 import './security-restrictions';
 import { getOSName, PLATFORM } from './helpers';
 
 // Initialize logger
 log.transports.file.setAppName('DecentralandLauncher');
 log.initialize();
+
+// Initialize protocol (deep link)
+initProtocol();
 
 /**
  * Prevent electron from running multiple instances.

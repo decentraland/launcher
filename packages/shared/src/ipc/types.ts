@@ -1,5 +1,6 @@
 export enum IPC_HANDLERS {
-  DOWNLOAD_APP = 'download-app',
+  DOWNLOAD_EXPLORER = 'download-explorer',
+  INSTALL_EXPLORER = 'install-explorer',
   IS_EXPLORER_INSTALLED = 'is-explorer-installed',
   IS_EXPLORER_UPDATED = 'is-explorer-updated',
   LAUNCH_EXPLORER = 'launch-explorer',
@@ -16,12 +17,11 @@ export enum IPC_EVENT_DATA_TYPE {
   START = 'START',
   PROGRESS = 'PROGRESS',
   COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  ERROR = 'ERROR',
-  OPEN = 'OPEN',
-  CLOSE = 'CLOSE',
   LAUNCH = 'LAUNCH',
   LAUNCHED = 'LAUNCHED',
+  CANCELLED = 'CANCELLED',
+  ERROR = 'ERROR',
+  CLOSE = 'CLOSE',
 }
 
 export interface IpcRendererEventData {
@@ -32,6 +32,11 @@ export interface IpcRendererEventData {
 export interface IpcRendererDownloadProgressStateEventData extends IpcRendererEventData {
   type: IPC_EVENT_DATA_TYPE.PROGRESS;
   progress: number;
+}
+
+export interface IpcRendererDownloadCompletedEventData extends IpcRendererEventData {
+  type: IPC_EVENT_DATA_TYPE.COMPLETED;
+  version: string;
 }
 
 export interface IpcRendererEventDataError extends IpcRendererEventData {

@@ -1,9 +1,12 @@
-import { dirname, join } from 'path';
-import fs from 'fs';
+import { dirname, join } from 'node:path';
+import fs from 'node:fs';
 import { app } from 'electron';
 import JSZip from 'jszip';
-import { v4 as uuid } from 'uuid';
-import { ConfigManager } from './config';
+import semver from 'semver';
+
+export function getAppVersion(): string {
+  return app.getVersion();
+}
 
 export enum PLATFORM {
   MAC = 'mac',
@@ -86,7 +89,7 @@ export async function decompressFile(sourcePath: string, destinationPath: string
   }
 }
 
-export function isAppInstalled(appPath: string): boolean {
+export function isAppInstalled(appPath: string, version: string): boolean {
   if (!fs.existsSync(appPath)) {
     return false;
   }
@@ -95,11 +98,13 @@ export function isAppInstalled(appPath: string): boolean {
     return false;
   }
 
-  return true;
+  const versionFile = join(appPath, 'version.json');
+  const versionData = JSON.parse(fs.readFileSync(versionFile, 'utf8'));
+  return versionData[version] !== undefined;
 }
 
 export function isAppUpdated(appPath: string, version: string): boolean {
-  if (!isAppInstalled(appPath)) {
+  if (!isAppInstalled(appPath, version)) {
     return false;
   }
 
@@ -108,36 +113,27 @@ export function isAppUpdated(appPath: string, version: string): boolean {
   return versionData.version === version;
 }
 
-export function getConfig(key: string): unknown {
-  const config = new ConfigManager();
-  return config.get(key);
-}
-
-export function setConfig(key: string, value: string): unknown {
-  const config = new ConfigManager();
-  return config.set(key, value);
-}
-
-export function getUserId() {
-  let userId = getConfig('analytics-user-id');
-  if (!userId) {
-    userId = uuid();
-    setConfig('analytics-user-id', userId as string);
-  }
-  return userId as string;
-}
-
+/**
+ * Extracts additional arguments from process.argv.
+ *
+ * @returns {string[]} An array of additional arguments that match specific patterns.
+ */
 export function getAdditionalArguments(): string[] {
   const args = [];
 
   if (process.argv.length > 2) {
     for (let i = 2; i < process.argv.length; i++) {
-      const arg = process.argv[i].toLowerCase();
-      if (/--(version|prerelease)/.test(arg)) {
+      const arg = process.argv[i];
+      if (/--(version|prerelease|dev|downloadedfilepath)/.test(arg)) {
         args.push(arg);
       }
     }
   }
 
   return args;
+}
+
+export function compareVersions(version1: string, version2: string) {
+  const result = semver.compare(version1, version2);
+  return result > 0;
 }

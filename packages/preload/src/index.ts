@@ -1,12 +1,10 @@
 /**
  * @module preload
  */
-
-import { sha256sum } from './nodeCrypto';
-import { versions, platform } from './versions';
 import {
-  downloadApp,
+  downloadExplorer,
   downloadState,
+  installExplorer,
   installState,
   launchExplorer,
   launchState,
@@ -14,13 +12,11 @@ import {
   isExplorerUpdated,
   getOSName,
 } from './ipc';
-import { getVersion, getIsPrerelease } from './argvs';
+import { getVersion, getIsPrerelease, getRunDevVersion, getDownloadedFilePath } from './argvs';
 export {
-  sha256sum,
-  versions,
-  platform,
-  downloadApp,
+  downloadExplorer,
   downloadState,
+  installExplorer,
   installState,
   launchExplorer,
   launchState,
@@ -29,4 +25,6 @@ export {
   getOSName,
   getVersion,
   getIsPrerelease,
+  getRunDevVersion,
+  getDownloadedFilePath,
 };
