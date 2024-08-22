@@ -41,7 +41,7 @@ mac:
   appId: com.Decentraland.Launcher
   icon: buildResources/icon.icns
   target: 
-    - target: default
+    - target: dmg
       arch:
         - x64
         - arm64
