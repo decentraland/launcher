@@ -17,13 +17,11 @@ export class Analytics {
   private sessionId: string = uuid();
   private os: string;
   private launcherVersion: string;
-  private ipAddress?: string;
 
-  constructor(anonymousId: string, os: string, launcherVersion: string, ipAddress?: string) {
+  constructor(anonymousId: string, os: string, launcherVersion: string) {
     this.anonymousId = anonymousId;
     this.os = os;
     this.launcherVersion = launcherVersion;
-    this.ipAddress = ipAddress;
 
     if (!import.meta.env.PROD) {
       return;
@@ -33,7 +31,7 @@ export class Analytics {
       return Analytics.instance;
     }
 
-    this.analytics = new SegmentAnalytics({ writeKey: SEGMENT_KEY });
+    this.analytics = new SegmentAnalytics({ writeKey: SEGMENT_KEY, flushAt: 1 });
 
     Analytics.instance = this;
   }
@@ -81,13 +79,6 @@ export class Analytics {
       };
     }
 
-    if (this.ipAddress) {
-      properties = {
-        ...properties,
-        ip: this.ipAddress,
-      };
-    }
-
     return properties;
   }
 
@@ -99,7 +90,7 @@ export class Analytics {
     return this.sessionId;
   }
 
-  track<T extends keyof ANALYTICS_EVENTS>(eventName: T, eventProps: ANALYTICS_EVENTS[T] | undefined = undefined) {
+  async track<T extends keyof ANALYTICS_EVENTS>(eventName: T, eventProps: ANALYTICS_EVENTS[T] | undefined = undefined) {
     const trackInfo = {
       event: eventName,
       anonymousId: this.anonymousId,
@@ -109,6 +100,8 @@ export class Analytics {
       },
     };
 
-    this.getAnalytics().track(trackInfo);
+    return new Promise(resolve => {
+      this.getAnalytics().track(trackInfo, resolve);
+    });
   }
 }

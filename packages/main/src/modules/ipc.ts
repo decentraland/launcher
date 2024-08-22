@@ -7,7 +7,6 @@ import log from 'electron-log/main';
 import { Analytics, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT, IPC_HANDLERS, getErrorMessage } from '#shared';
 import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM, getAppVersion } from '../helpers';
 import { getUserId } from './config';
-import { getIpAddress } from './net';
 
 const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
 const EXPLORER_DOWNLOADS_PATH = join(EXPLORER_PATH, 'downloads');
@@ -18,7 +17,7 @@ const EXPLORER_DEV_VERSION_PATH = join(EXPLORER_PATH, 'dev');
 const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
 const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
 
-let analytics: Analytics;
+const analytics = new Analytics(getUserId(), getOSName(), getAppVersion());
 
 function getVersionData(): Record<string, string> {
   return fs.existsSync(EXPLORER_VERSION_PATH) ? JSON.parse(fs.readFileSync(EXPLORER_VERSION_PATH, 'utf8')) : {};
@@ -196,10 +195,10 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
     explorerProtocol += `&${launcherParams}`;
     log.info('[Main Window][IPC][LaunchExplorer] Opening the Explorer', explorerProtocol);
     spawn(explorerBinPath, [explorerProtocol], { detached: true, stdio: 'ignore' })
-      .on('spawn', () => {
+      .on('spawn', async () => {
         event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, { type: IPC_EVENT_DATA_TYPE.LAUNCHED });
-        analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_SUCCESS, { version: versionData.version });
-        closeWindow();
+        await analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_SUCCESS, { version: versionData.version });
+        await closeWindow();
       })
       .on('close', () => {
         closeWindow();
@@ -219,9 +218,7 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
   }
 }
 
-export async function initIpcHandlers() {
-  const ipAddress = await getIpAddress();
-  analytics = new Analytics(getUserId(), getOSName(), getAppVersion(), ipAddress);
+export function initIpcHandlers() {
   analytics.track(ANALYTICS_EVENT.LAUNCHER_OPEN);
 
   ipcMain.handle(IPC_HANDLERS.DOWNLOAD_EXPLORER, downloadExplorer);
@@ -237,8 +234,9 @@ export async function initIpcHandlers() {
 }
 
 async function closeWindow() {
-  analytics.track(ANALYTICS_EVENT.LAUNCHER_CLOSE);
+  await analytics.track(ANALYTICS_EVENT.LAUNCHER_CLOSE);
   await analytics.closeAndFlush();
+
   BrowserWindow.getAllWindows()
     .find(w => !w.isDestroyed())
     ?.close();
