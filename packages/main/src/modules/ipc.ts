@@ -188,6 +188,7 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
     // Validates the explorer binary is executable
     fs.accessSync(explorerBinPath, fs.constants.X_OK);
 
+    // Forward the deeplink url to the explorer containing all the params
     const explorerParams = [
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global as any).protocol,
