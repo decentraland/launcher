@@ -23,13 +23,17 @@ vi.mock('electron', () => {
   bw.prototype.restore = vi.fn();
   bw.prototype.setMenuBarVisibility = vi.fn();
 
-  const app: Pick<Electron.App, 'getAppPath' | 'getPath'> = {
+  const app: Pick<Electron.App, 'getAppPath' | 'getPath' | 'getVersion' | 'on'> = {
     getAppPath(): string {
       return '';
     },
     getPath(): string {
       return '';
     },
+    getVersion(): string {
+      return '1.0.0';
+    },
+    on: vi.fn(),
   };
 
   const ipcMain: Pick<Electron.IpcMain, 'handle'> = {
