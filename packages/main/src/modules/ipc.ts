@@ -192,8 +192,10 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
     const explorerParams = [
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global as any).protocol,
-      `--launcher_anonymous_id ${analytics.getAnonymousId()}`,
-      `--session_id ${analytics.getSessionId()}`,
+      '--launcher_anonymous_id',
+      analytics.getAnonymousId(),
+      '--session_id',
+      analytics.getSessionId(),
     ].filter(arg => !!arg);
     log.info('[Main Window][IPC][LaunchExplorer] Opening the Explorer', explorerParams);
     spawn(explorerBinPath, explorerParams, { detached: true, stdio: 'ignore' })
