@@ -12,8 +12,8 @@ export function isValidVersion(version: string): boolean {
 export function parseArgv(): Record<string, string> {
   const parsedArgv: Record<string, string> = {};
 
-  if (process.argv.length > 2) {
-    for (let i = 2; i < process.argv.length; i++) {
+  if (process.argv.length > 0) {
+    for (let i = 0; i < process.argv.length; i++) {
       const arg = process.argv[i];
       if (/--(version|prerelease|dev|downloadedfilepath)/.test(arg)) {
         const [key, value] = arg.split('=');

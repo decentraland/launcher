@@ -137,8 +137,8 @@ export function isAppUpdated(appPath: string, version: string): boolean {
 export function getAdditionalArguments(): string[] {
   const args = [];
 
-  if (process.argv.length > 2) {
-    for (let i = 2; i < process.argv.length; i++) {
+  if (process.argv.length > 0) {
+    for (let i = 0; i < process.argv.length; i++) {
       const arg = process.argv[i];
       if (/--(version|prerelease|dev|downloadedfilepath)/.test(arg)) {
         args.push(arg);

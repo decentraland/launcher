@@ -24,8 +24,8 @@ export function initProtocol() {
   }
 
   app.whenReady().then(() => {
-    if (process.argv.length >= 2) {
-      const url = process.argv.slice(1).find(arg => arg.startsWith(`${PROTOCOL}://`));
+    if (process.argv.length > 0) {
+      const url = process.argv.find(arg => arg.startsWith(`${PROTOCOL}://`));
       if (url) {
         handleProtocol(url);
       }
