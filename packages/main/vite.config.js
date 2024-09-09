@@ -42,6 +42,7 @@ const config = {
     sentryVitePlugin({
       org: 'decentraland',
       project: 'launcher',
+      disable: process.env.MODE === 'development' || process.env.DRY_RUN,
     }),
   ],
 };

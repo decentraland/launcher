@@ -78,6 +78,7 @@ jobs:
       - run: npm run build
         env:
           MODE: production
+          DRY_RUN: ${{ inputs.dry-run }}
           # Sentry Auth Token
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
