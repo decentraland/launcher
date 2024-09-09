@@ -2,6 +2,7 @@
 /* eslint-env node */
 
 import { join } from 'node:path';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react';
 import { renderer } from 'unplugin-auto-expose';
 import { chrome } from '../../.electron-vendors.cache.json';
@@ -48,6 +49,10 @@ const config = {
     react(),
     renderer.vite({
       preloadEntry: join(PROJECT_ROOT, 'packages/preload/src/index.ts'),
+    }),
+    sentryVitePlugin({
+      org: 'decentraland',
+      project: 'launcher',
     }),
   ],
 };
