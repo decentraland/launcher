@@ -1,5 +1,6 @@
-import { node } from '../../.electron-vendors.cache.json';
 import { join } from 'node:path';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { node } from '../../.electron-vendors.cache.json';
 
 const PACKAGE_ROOT = __dirname;
 const PROJECT_ROOT = join(PACKAGE_ROOT, '../..');
@@ -14,7 +15,7 @@ const config = {
   envDir: PROJECT_ROOT,
   build: {
     ssr: true,
-    sourcemap: 'inline',
+    sourcemap: true,
     target: `node${node}`,
     outDir: 'dist',
     assetsDir: '.',
@@ -30,6 +31,13 @@ const config = {
     },
     emptyOutDir: true,
     reportCompressedSize: false,
+    plugins: [
+      sentryVitePlugin({
+        org: 'decentraland',
+        project: 'launcher',
+        disable: process.env.MODE === 'development' || process.env.DRY_RUN,
+      }),
+    ],
   },
 };
 

@@ -1,6 +1,7 @@
-import { chrome } from '../../.electron-vendors.cache.json';
-import { preload } from 'unplugin-auto-expose';
 import { join } from 'node:path';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { preload } from 'unplugin-auto-expose';
+import { chrome } from '../../.electron-vendors.cache.json';
 
 const PACKAGE_ROOT = __dirname;
 const PROJECT_ROOT = join(PACKAGE_ROOT, '../..');
@@ -15,7 +16,7 @@ const config = {
   envDir: PROJECT_ROOT,
   build: {
     ssr: true,
-    sourcemap: 'inline',
+    sourcemap: true,
     target: `chrome${chrome}`,
     outDir: 'dist',
     assetsDir: '.',
@@ -39,7 +40,14 @@ const config = {
       '#shared': join(PROJECT_ROOT, 'packages/shared/src/index.ts'),
     },
   },
-  plugins: [preload.vite()],
+  plugins: [
+    preload.vite(),
+    sentryVitePlugin({
+      org: 'decentraland',
+      project: 'launcher',
+      disable: process.env.MODE === 'development' || process.env.DRY_RUN,
+    }),
+  ],
 };
 
 export default config;
