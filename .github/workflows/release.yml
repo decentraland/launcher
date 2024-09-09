@@ -35,6 +35,8 @@ on:
       ES_TOTP_SECRET:
         description: 'Password to decrypt the certificate file'
         required: true
+      SENTRY_AUTH_TOKEN:
+        description: 'Sentry auth token'
 
 concurrency:
   group: release-${{ github.ref }}
@@ -76,6 +78,8 @@ jobs:
       - run: npm run build
         env:
           MODE: production
+          # Sentry Auth Token
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Generate Release Version
         id: version
