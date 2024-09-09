@@ -41,7 +41,7 @@ const config = {
     },
   },
   plugins: [
-    preload.vite(), 
+    preload.vite(),
     sentryVitePlugin({
       org: 'decentraland',
       project: 'launcher',

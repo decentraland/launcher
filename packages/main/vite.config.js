@@ -38,10 +38,12 @@ const config = {
     emptyOutDir: true,
     reportCompressedSize: false,
   },
-  plugins: [sentryVitePlugin({
-    org: 'decentraland',
-    project: 'launcher',
-  })],
+  plugins: [
+    sentryVitePlugin({
+      org: 'decentraland',
+      project: 'launcher',
+    }),
+  ],
 };
 
 export default config;
