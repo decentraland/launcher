@@ -1,7 +1,9 @@
 import { dirname, join } from 'node:path';
 import fs from 'node:fs';
+import stream from 'node:stream';
 import { app } from 'electron';
 import JSZip from 'jszip';
+import { extract } from 'tar';
 import semver from 'semver';
 
 export function getAppVersion(): string {
@@ -64,24 +66,40 @@ export async function decompressFile(sourcePath: string, destinationPath: string
       throw new Error(`Source file does not exist: ${sourcePath}`);
     }
 
+    // Ensure the destination directory exists
+    ensureDirSync(destinationPath);
+
     // Read the ZIP file
     const data = fs.readFileSync(sourcePath);
     const zip = await JSZip.loadAsync(data);
 
-    // Ensure the destination directory exists
-    ensureDirSync(destinationPath);
+    const tarFile = Object.values(zip.files).find(file => file.name.endsWith('.tar'));
 
-    // Extract all files
-    for (const [relativePath, file] of Object.entries(zip.files)) {
-      const outputPath = join(destinationPath, relativePath);
+    if (tarFile) {
+      // Extract .tar files
+      const tarFileData = await tarFile.async('nodebuffer');
+      // Create a readable stream from the buffer
+      const tarFileStream = new stream.PassThrough();
+      tarFileStream.end(tarFileData);
+      await new Promise((resolve, reject) => {
+        tarFileStream
+          .pipe(extract({ cwd: destinationPath }))
+          .on('error', reject)
+          .on('end', resolve);
+      });
+    } else {
+      // Extract all files
+      for (const [relativePath, file] of Object.entries(zip.files)) {
+        const outputPath = join(destinationPath, relativePath);
 
-      ensureDirSync(dirname(outputPath));
+        ensureDirSync(dirname(outputPath));
 
-      if (file.dir) {
-        ensureDirSync(outputPath);
-      } else {
-        const content = await file.async('nodebuffer');
-        fs.writeFileSync(outputPath, content);
+        if (file.dir) {
+          ensureDirSync(outputPath);
+        } else {
+          const content = await file.async('nodebuffer');
+          fs.writeFileSync(outputPath, content);
+        }
       }
     }
   } catch (error) {
