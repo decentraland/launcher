@@ -1,10 +1,16 @@
 import { app } from 'electron';
 import updater from 'electron-updater';
 import log from 'electron-log/main';
+import * as Sentry from '@sentry/electron/main';
 import { initProtocol } from './modules/protocol';
 import { restoreOrCreateWindow } from './mainWindow';
 import './security-restrictions';
 import { getOSName, PLATFORM } from './helpers';
+
+// Initialize Sentry
+Sentry.init({
+  dsn: 'https://47fa1e9f4bfed88d2a4b2bdd7b3d48b6@o4504361728212992.ingest.us.sentry.io/4507924285161472',
+});
 
 // Initialize logger
 log.transports.file.setAppName('DecentralandLauncher');
@@ -75,8 +81,11 @@ function updateAppAndQuit() {
     });
     updater.autoUpdater.on('update-downloaded', _info => {
       log.info('[Main Window][AutoUpdater] Update downloaded');
-      const silent = getOSName() === PLATFORM.WINDOWS;
-      updater.autoUpdater.quitAndInstall(silent, false);
+      if (getOSName() === PLATFORM.WINDOWS) {
+        updater.autoUpdater.quitAndInstall(true, false);
+      } else {
+        app.quit();
+      }
     });
     updater.autoUpdater.on('error', err => {
       log.error('[Main Window][AutoUpdater] Error in auto-updater', err);

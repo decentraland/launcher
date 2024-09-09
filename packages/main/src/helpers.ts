@@ -36,8 +36,6 @@ export function getAppBasePath(): string {
     throw new Error('Unsupported OS');
   }
 
-  if (process.env.RUN_ENV === 'development') return './';
-
   const applicationFolderName = 'DecentralandLauncher';
 
   return osName === PLATFORM.WINDOWS ? dirname(app.getPath('exe')) : join(app.getPath('appData'), applicationFolderName);
