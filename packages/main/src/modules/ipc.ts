@@ -14,7 +14,7 @@ const EXPLORER_DOWNLOADED_FILENAME = 'decentraland.zip';
 const EXPLORER_VERSION_PATH = join(EXPLORER_PATH, 'version.json');
 const EXPLORER_LATEST_VERSION_PATH = join(EXPLORER_PATH, 'latest');
 const EXPLORER_DEV_VERSION_PATH = join(EXPLORER_PATH, 'dev');
-const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
+const EXPLORER_MAC_BIN_PATH = '/build/Decentraland.app/Contents/MacOS/Explorer';
 const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
 
 const analytics = new Analytics(getUserId(), getOSName(), getAppVersion());
