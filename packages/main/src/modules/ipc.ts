@@ -176,7 +176,7 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
 
     if (!fs.existsSync(explorerBinPath)) {
       const errorMessage = version ? `The explorer version specified: ${version} is not installed.` : 'The explorer is not installed.';
-      log.error(`[Main Window][IPC][LaunchExplorer] ${errorMessage}`);
+      log.error(`[Main Window][IPC][LaunchExplorer] ${errorMessage}`, explorerBinPath);
       event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, {
         type: IPC_EVENT_DATA_TYPE.ERROR,
         error: errorMessage,
