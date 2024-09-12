@@ -85,3 +85,10 @@ The CI pipeline is configured to automate the release process for the Decentrala
    - The auto updater, as mentioned in the Update Process, will pick up this new release and update the production app.
 
 This streamlined process ensures that updates are consistently and accurately deployed to users.
+
+## Dev Testing with a local explorer build (MacOS)
+
+1. Download or make a local build of [The Explorer](https://github.com/decentraland/unity-explorer)
+2. Rename the build `.app` file to `Decentraland.app` and place it in "~/Library/Application\ Support/DecentralandLauncher/Explorer/dev/Decentraland.app"
+3. Grant permissions to the build with `chmod +x ~/Library/Application\ Support/DecentralandLauncher/Explorer/dev/Decentraland.app`
+4. Run the launcher using the dev build, example: `open "decentraland://realm=http://127.0.0.1:8000&position=54,-55&local-scene=true" --args --dev` or `open "decentraland://position=6,-66" --args --dev`
