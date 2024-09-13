@@ -5,7 +5,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { download } from 'electron-dl';
 import log from 'electron-log/main';
 import { Analytics, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT, IPC_HANDLERS, getErrorMessage } from '#shared';
-import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM, getAppVersion } from '../helpers';
+import { getAppBasePath, decompressFile, getOSName, isAppUpdated, PLATFORM, getAppVersion } from '../helpers';
 import { getUserId } from './config';
 
 const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
@@ -40,11 +40,11 @@ function getExplorerBinPath(version?: string): string {
 }
 
 export function isExplorerInstalled(_event: Electron.IpcMainInvokeEvent, version: string) {
-  return isAppInstalled(getExplorerBinPath(version), version);
+  return fs.existsSync(getExplorerBinPath(version));
 }
 
-export function isExplorerUpdated(_event: Electron.IpcMainInvokeEvent, version: string) {
-  return isAppUpdated(getExplorerBinPath(version), version);
+export function isExplorerUpdated(event: Electron.IpcMainInvokeEvent, version: string) {
+  return isExplorerInstalled(event, version) && isAppUpdated(EXPLORER_PATH, version);
 }
 
 export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: string) {

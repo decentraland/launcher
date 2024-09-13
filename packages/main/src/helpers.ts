@@ -135,25 +135,7 @@ export async function decompressFile(sourcePath: string, destinationPath: string
   }
 }
 
-export function isAppInstalled(appPath: string, version: string): boolean {
-  if (!fs.existsSync(appPath)) {
-    return false;
-  }
-
-  if (!fs.existsSync(join(appPath, 'version.json'))) {
-    return false;
-  }
-
-  const versionFile = join(appPath, 'version.json');
-  const versionData = JSON.parse(fs.readFileSync(versionFile, 'utf8'));
-  return versionData[version] !== undefined;
-}
-
 export function isAppUpdated(appPath: string, version: string): boolean {
-  if (!isAppInstalled(appPath, version)) {
-    return false;
-  }
-
   const versionFile = join(appPath, 'version.json');
   const versionData = JSON.parse(fs.readFileSync(versionFile, 'utf8'));
   return versionData.version === version;
