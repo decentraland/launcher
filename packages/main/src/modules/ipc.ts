@@ -5,7 +5,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { download } from 'electron-dl';
 import log from 'electron-log/main';
 import { Analytics, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT, IPC_HANDLERS, getErrorMessage } from '#shared';
-import { getAppBasePath, decompressFile, getOSName, isAppInstalled, isAppUpdated, PLATFORM, getAppVersion } from '../helpers';
+import { getAppBasePath, decompressFile, getOSName, isAppUpdated, PLATFORM, getAppVersion } from '../helpers';
 import { getUserId } from './config';
 
 const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
@@ -21,6 +21,30 @@ const analytics = new Analytics(getUserId(), getOSName(), getAppVersion());
 
 function getVersionData(): Record<string, string> {
   return fs.existsSync(EXPLORER_VERSION_PATH) ? JSON.parse(fs.readFileSync(EXPLORER_VERSION_PATH, 'utf8')) : {};
+}
+
+function getExplorerBinPath(version?: string): string {
+  const explorerPath = version
+    ? version === 'dev'
+      ? EXPLORER_DEV_VERSION_PATH
+      : join(EXPLORER_PATH, version)
+    : EXPLORER_LATEST_VERSION_PATH;
+
+  if (getOSName() === PLATFORM.MAC) {
+    return join(explorerPath, EXPLORER_MAC_BIN_PATH);
+  } else if (getOSName() === PLATFORM.WINDOWS) {
+    return join(explorerPath, EXPLORER_WIN_BIN_PATH);
+  } else {
+    throw new Error('Unsupported OS');
+  }
+}
+
+export function isExplorerInstalled(_event: Electron.IpcMainInvokeEvent, version: string) {
+  return fs.existsSync(getExplorerBinPath(version));
+}
+
+export function isExplorerUpdated(event: Electron.IpcMainInvokeEvent, version: string) {
+  return isExplorerInstalled(event, version) && isAppUpdated(EXPLORER_PATH, version);
 }
 
 export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: string) {
@@ -43,14 +67,6 @@ export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: 
     }
 
     if (url) {
-      const versionData = getVersionData();
-
-      if (versionData[version]) {
-        log.info('[Main Window][IPC][DownloadExplorer] This version is already installed');
-        event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.CANCELLED, version });
-        return;
-      }
-
       const resp = await download(win, url, {
         directory: EXPLORER_DOWNLOADS_PATH,
         filename: EXPLORER_DOWNLOADED_FILENAME,
@@ -137,30 +153,6 @@ export async function installExplorer(event: Electron.IpcMainInvokeEvent, versio
     log.error('[Main Window][IPC][InstallExplorer] Failed to install app:', error);
     event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
     analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_ERROR, { version });
-  }
-}
-
-export function isExplorerInstalled(_event: Electron.IpcMainInvokeEvent, version: string) {
-  return isAppInstalled(EXPLORER_PATH, version) && fs.existsSync(EXPLORER_LATEST_VERSION_PATH);
-}
-
-export function isExplorerUpdated(_event: Electron.IpcMainInvokeEvent, version: string) {
-  return isAppUpdated(EXPLORER_PATH, version);
-}
-
-function getExplorerBinPath(version?: string): string {
-  const explorerPath = version
-    ? version === 'dev'
-      ? EXPLORER_DEV_VERSION_PATH
-      : join(EXPLORER_PATH, version)
-    : EXPLORER_LATEST_VERSION_PATH;
-
-  if (getOSName() === PLATFORM.MAC) {
-    return join(explorerPath, EXPLORER_MAC_BIN_PATH);
-  } else if (getOSName() === PLATFORM.WINDOWS) {
-    return join(explorerPath, EXPLORER_WIN_BIN_PATH);
-  } else {
-    throw new Error('Unsupported OS');
   }
 }
 
