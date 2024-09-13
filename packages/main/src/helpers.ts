@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import stream from 'node:stream';
 import { app } from 'electron';
 import JSZip from 'jszip';
-import { extract } from 'tar';
+import { extract, list } from 'tar';
 import semver from 'semver';
 
 export function getAppVersion(): string {
@@ -79,9 +79,39 @@ export async function decompressFile(sourcePath: string, destinationPath: string
       // Create a readable stream from the buffer
       const tarFileStream = new stream.PassThrough();
       tarFileStream.end(tarFileData);
+      let strip = 0;
+      // TODO: Remove this list step when the compressing process removes the folder
       await new Promise((resolve, reject) => {
-        tarFileStream
-          .pipe(extract({ cwd: destinationPath }))
+        const inspectionStream = new stream.PassThrough();
+        inspectionStream.end(tarFileData);
+
+        inspectionStream
+          .pipe(
+            list({
+              cwd: destinationPath,
+              onReadEntry: entry => {
+                if (entry.path.endsWith('Decentraland.app/')) {
+                  const parts = entry.path.split('/');
+                  strip = parts.length - 2;
+                }
+                entry.resume();
+              },
+            }),
+          )
+          .on('end', resolve)
+          .on('error', reject);
+      });
+
+      await new Promise((resolve, reject) => {
+        const extractionStream = new stream.PassThrough();
+        extractionStream.end(tarFileData);
+        extractionStream
+          .pipe(
+            extract({
+              cwd: destinationPath,
+              strip: strip,
+            }),
+          )
           .on('error', reject)
           .on('end', resolve);
       });
