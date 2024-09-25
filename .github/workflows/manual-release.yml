@@ -66,9 +66,7 @@ jobs:
           retry_wait_seconds: 15
           retry_on: error
           shell: 'bash'
-          # Due to this issue https://github.com/electron-userland/electron-builder/issues/6411 the build with npx when rebuilding native dependencies hangs forever
-          # see https://github.com/cawa-93/vite-electron-builder/pull/953
-          command: ./node_modules/.bin/electron-builder --config electron-builder.yml -c.extraMetadata.version=${{ github.event.inputs.version }} -c.mac.notarize.teamId=${{ env.APPLE_TEAM_ID }} --publish always
+          command: npx electron-builder --config electron-builder.yml -c.extraMetadata.version=${{ github.event.inputs.version }} -c.mac.notarize.teamId=${{ env.APPLE_TEAM_ID }} --publish always
         env:
           # Code Signing params
           # See https://www.electron.build/code-signing
