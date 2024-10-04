@@ -5,7 +5,7 @@ import { initIpcHandlers } from './modules/ipc';
 import { getAppIcon, getAdditionalArguments } from './helpers';
 
 async function createWindow() {
-  await initIpcHandlers();
+  initIpcHandlers();
 
   const browserWindow = new BrowserWindow({
     show: false, // Use the 'ready-to-show' event to show the instantiated BrowserWindow.
@@ -84,4 +84,22 @@ export async function restoreOrCreateWindow() {
   }
 
   window.focus();
+
+  // Listen to active downloads and cancel them when the window is closed.
+  let activeDownloads: Electron.DownloadItem[] = [];
+  window.webContents.session.on('will-download', (_, item) => {
+    activeDownloads.push(item);
+    item.on('done', () => {
+      activeDownloads = activeDownloads.filter(dl => dl !== item);
+    });
+  });
+
+  window.on('close', _ => {
+    // Cancel all active downloads
+    activeDownloads.forEach(dlItem => {
+      if (dlItem.getState() === 'progressing') {
+        dlItem.cancel();
+      }
+    });
+  });
 }
