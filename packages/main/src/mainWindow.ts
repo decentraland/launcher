@@ -90,15 +90,15 @@ export async function restoreOrCreateWindow() {
   window.webContents.session.on('will-download', (_, item) => {
     activeDownloads.push(item);
     item.on('done', () => {
-      activeDownloads = activeDownloads.filter(dl => dl !== item);
+      activeDownloads = activeDownloads.filter(_item => _item !== item);
     });
   });
 
   window.on('close', _ => {
     // Cancel all active downloads
-    activeDownloads.forEach(dlItem => {
-      if (dlItem.getState() === 'progressing') {
-        dlItem.cancel();
+    activeDownloads.forEach(item => {
+      if (item.getState() === 'progressing') {
+        item.cancel();
       }
     });
   });
