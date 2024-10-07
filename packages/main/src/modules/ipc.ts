@@ -2,7 +2,7 @@ import { join } from 'path';
 import fs from 'node:fs';
 import { spawn } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { download } from 'electron-dl';
+import { CancelError, download } from 'electron-dl';
 import log from 'electron-log/main';
 import { Analytics, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT, IPC_HANDLERS, getErrorMessage } from '#shared';
 import { getAppBasePath, decompressFile, getOSName, isAppUpdated, PLATFORM, getAppVersion } from '../helpers';
@@ -102,8 +102,12 @@ export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: 
       });
     }
   } catch (error) {
-    log.error('[Main Window][IPC][DownloadExplorer] Error Downloading', url, error);
-    event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
+    if (error instanceof CancelError) {
+      log.error('[Main Window][IPC][DownloadExplorer] Download Cancelled');
+    } else {
+      log.error('[Main Window][IPC][DownloadExplorer] Error Downloading', url, error);
+      event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
+    }
   }
 
   return null;
