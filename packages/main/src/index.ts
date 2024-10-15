@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/electron/main';
 import { initProtocol } from './modules/protocol';
 import { restoreOrCreateWindow } from './mainWindow';
 import './security-restrictions';
+import { getOSName, PLATFORM } from './helpers';
 
 // Initialize Sentry
 Sentry.init({
@@ -82,7 +83,8 @@ function updateAppAndQuit() {
     });
     updater.autoUpdater.on('update-downloaded', _info => {
       log.info('[Main Window][AutoUpdater] Update downloaded');
-      app.quit();
+      const silent = getOSName() === PLATFORM.WINDOWS;
+      updater.autoUpdater.quitAndInstall(silent, false);
     });
     updater.autoUpdater.on('error', err => {
       log.error('[Main Window][AutoUpdater] Error in auto-updater', err);
