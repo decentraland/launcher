@@ -4,7 +4,16 @@ import { spawn } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { CancelError, download } from 'electron-dl';
 import log from 'electron-log/main';
-import { Analytics, IPC_EVENTS, IPC_EVENT_DATA_TYPE, ANALYTICS_EVENT, IPC_HANDLERS, getErrorMessage } from '#shared';
+import {
+  Analytics,
+  IPC_EVENTS,
+  IPC_EVENT_DATA_TYPE,
+  ANALYTICS_EVENT,
+  IPC_HANDLERS,
+  getErrorMessage,
+  getBucketURL,
+  RELEASE_PREFIX,
+} from '#shared';
 import { getAppBasePath, decompressFile, getOSName, isAppUpdated, PLATFORM, getAppVersion } from '../helpers';
 import { getUserId } from './config';
 
@@ -54,8 +63,8 @@ export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: 
 
     log.info('[Main Window][IPC][DownloadExplorer] Downloading', url);
 
-    const versionPattern = /^https:\/\/github.com\/decentraland\/.+\/releases\/download\/(v?\d+\.\d+\.\d+-?\w+)\/(\w+.zip)$/;
-    const version = url.match(versionPattern)?.[1];
+    const versionPattern = new RegExp(`(^${getBucketURL()}\\/\\${RELEASE_PREFIX})\\/(v?\\d+\\.\\d+\\.\\d+-?\\w*)\\/(\\w+.zip)$`);
+    const version = url.match(versionPattern)?.[2];
 
     if (!version) {
       log.error('[Main Window][IPC][DownloadExplorer] No valid url provided');
