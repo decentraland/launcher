@@ -35,8 +35,23 @@ on:
       ES_TOTP_SECRET:
         description: 'Password to decrypt the certificate file'
         required: true
+      SEGMENT_API_KEY: 
+        description: 'Segment API key'
+        required: true
       SENTRY_AUTH_TOKEN:
         description: 'Sentry auth token'
+        required: true
+      SENTRY_DSN:
+        description: 'Sentry DSN to perform the requests'
+        required: true
+      EXPLORER_TEAM_AWS_ACCESS_KEY_ID:
+        required: true
+      EXPLORER_TEAM_AWS_SECRET_ACCESS_KEY:
+        required: true
+      EXPLORER_TEAM_AWS_DEFAULT_REGION:
+        required: true
+      EXPLORER_TEAM_S3_BUCKET:
+        required: true
 
 concurrency:
   group: release-${{ github.ref }}
@@ -79,8 +94,16 @@ jobs:
         env:
           MODE: production
           DRY_RUN: ${{ inputs.dry-run }}
-          # Sentry Auth Token
+          # Segment API Key
+          SEGMENT_API_KEY: ${{ secrets.SEGMENT_API_KEY }}
+          # Sentry AUTH Token
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          # AWS Secrets
+          AWS_ACCESS_KEY_ID: ${{ secrets.EXPLORER_TEAM_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.EXPLORER_TEAM_AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.EXPLORER_TEAM_AWS_DEFAULT_REGION }}
+          AWS_S3_BUCKET: ${{ secrets.EXPLORER_TEAM_S3_BUCKET }}
 
       - name: Generate Release Version
         id: version

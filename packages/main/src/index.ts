@@ -9,7 +9,7 @@ import { getOSName, PLATFORM } from './helpers';
 
 // Initialize Sentry
 Sentry.init({
-  dsn: 'https://47fa1e9f4bfed88d2a4b2bdd7b3d48b6@o4504361728212992.ingest.us.sentry.io/4507924285161472',
+  dsn: import.meta.env.VITE_SENTRY_DSN,
   enabled: import.meta.env.PROD,
 });
 
