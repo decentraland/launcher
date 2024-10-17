@@ -92,3 +92,4 @@ This streamlined process ensures that updates are consistently and accurately de
 2. Rename the build `.app` file to `Decentraland.app` and place it in "~/Library/Application\ Support/DecentralandLauncher/Explorer/dev/Decentraland.app"
 3. Grant permissions to the build with `chmod +x ~/Library/Application\ Support/DecentralandLauncher/Explorer/dev/Decentraland.app`
 4. Run the launcher using the dev build, example: `open "decentraland://realm=http://127.0.0.1:8000&position=54,-55&local-scene=true" --args --dev` or `open "decentraland://position=6,-66" --args --dev`
+
