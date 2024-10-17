@@ -57,15 +57,15 @@ jobs:
         env:
           MODE: production
           # Segment API Key
-          SEGMENT_API_KEY: ${{ secrets.SEGMENT_API_KEY }}
+          VITE_SEGMENT_API_KEY: ${{ secrets.SEGMENT_API_KEY }}
           # Sentry AUTH Token
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           # AWS Secrets
           AWS_ACCESS_KEY_ID: ${{ secrets.EXPLORER_TEAM_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.EXPLORER_TEAM_AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.EXPLORER_TEAM_AWS_DEFAULT_REGION }}
-          AWS_S3_BUCKET: ${{ secrets.EXPLORER_TEAM_S3_BUCKET }}
+          VITE_AWS_S3_BUCKET: ${{ secrets.EXPLORER_TEAM_S3_BUCKET }}
 
       # Download 'SSLcom/esigner-codesign' to a folder called 'esigner-codesign' in the root of the project
       - name: Checkout esigner-codesign repository (Windows)
