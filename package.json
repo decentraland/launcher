@@ -19,7 +19,7 @@
     "build:renderer": "cd ./packages/renderer && vite build",
     "build:shared": "cd ./packages/shared && vite build",
     "compile": "cross-env MODE=production npm run build && electron-builder build --config electron-builder.cjs --dir",
-    "compile:installer": "rm -rf ./dist/ && cross-env MODE=production npm run build && electron-builder build --config electron-builder.cjs --publish never",
+    "compile:installer": "rm -rf ./dist/ && cross-env MODE=development npm run build && electron-builder build --config electron-builder.cjs --publish never",
     "test": "npm run test:main && npm run test:preload && npm run test:renderer && npm run test:e2e",
     "test:e2e": "npm run build && vitest run",
     "test:main": "vitest run -r packages/main --passWithNoTests",
@@ -68,6 +68,9 @@
     "vitest": "^2.0.5"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.670.0",
+    "@aws-sdk/lib-storage": "^3.670.0",
+    "@aws-sdk/s3-request-presigner": "^3.670.0",
     "@segment/analytics-node": "^2.1.2",
     "@sentry/electron": "^5.4.0",
     "@sentry/react": "^8.29.0",

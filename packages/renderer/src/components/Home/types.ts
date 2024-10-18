@@ -2,7 +2,7 @@ export enum APPS {
   Explorer = 'unity-explorer',
 }
 
-export interface GithubReleaseResponse {
+export interface ReleaseResponse {
   browser_download_url: string;
   version: string;
 }

@@ -11,11 +11,11 @@ import {
   launchState,
   isExplorerInstalled,
   isExplorerUpdated,
-  getOSName,
   getVersion,
   getIsPrerelease,
   getRunDevVersion,
   getDownloadedFilePath,
+  getLatestExplorerRelease,
 } from '#preload';
 import {
   IPC_EVENT_DATA_TYPE,
@@ -25,7 +25,7 @@ import {
   getErrorMessage,
   IpcRendererDownloadCompletedEventData,
 } from '#shared';
-import { APPS, AppState, GithubReleaseResponse, GithubRelease } from './types';
+import { AppState, ReleaseResponse } from './types';
 import { Landscape, LoadingBar } from './Home.styles';
 import LANDSCAPE_IMG from '/@assets/landscape.png';
 
@@ -33,47 +33,20 @@ const ONE_SECOND = 1000;
 const FIVE_SECONDS = 5 * ONE_SECOND;
 
 /**
- * Retrieves the latest release information from the GitHub API.
- * @param version - Optional. The specific version to retrieve. If not provided, retrieves the latest version.
- * @param isPrerelease - Optional. Specifies whether to retrieve a prerelease version. Default is false.
+ * Retrieves the latest release.
+ * TODO: @param version - Optional. The specific version to retrieve. If not provided, retrieves the latest version.
+ * TODO: @param isPrerelease - Optional. Specifies whether to retrieve a prerelease version. Default is false.
  * @returns A Promise that resolves to the latest release information.
  * @throws An error if no asset is found for the specified platform or if the API request fails.
  */
-async function getLatestRelease(version?: string, isPrerelease: boolean = false): Promise<GithubReleaseResponse> {
+async function getLatestRelease(version?: string, isPrerelease: boolean = false): Promise<ReleaseResponse> {
   try {
-    const resp = await fetch(`https://api.github.com/repos/decentraland/${APPS.Explorer}/releases`);
-    if (resp.status === 200) {
-      const releases: GithubRelease[] = await resp.json();
-      const os = await getOSName();
-      let isMatchingOS = false;
-      let isValidVersion = false;
-      let isValidPrerelease = false;
-
-      for (const release of releases) {
-        for (const asset of release.assets) {
-          isMatchingOS = asset.name.toLowerCase().includes(os.toLowerCase());
-          isValidVersion = !version || version === release.name;
-          isValidPrerelease = !isPrerelease || (isPrerelease && !!release.prerelease);
-          if (isMatchingOS && isValidVersion && isValidPrerelease) {
-            return {
-              browser_download_url: asset.browser_download_url,
-              version: release.name,
-            };
-          }
-        }
-      }
-
-      if (!isMatchingOS) {
-        throw new Error('No asset found for your platform');
-      } else if (!isValidVersion) {
-        throw new Error('No asset found for the specified version');
-      } else if (!isValidPrerelease) {
-        throw new Error('No asset found with the prerelease flag');
-      }
+    const release = await getLatestExplorerRelease(version, isPrerelease);
+    if (release) {
+      return release;
     }
 
-    const _resp = await resp.json();
-    throw new Error(getErrorMessage(_resp));
+    throw new Error('No asset found for your platform');
   } catch (error) {
     log.error('[Renderer][Home][GetLatestRelease]', error);
     throw new Error('Failed to fetch latest release');
@@ -330,16 +303,14 @@ export const Home: React.FC = memo(() => {
   }, []);
 
   const handleOnClickRetry = useCallback(() => {
-    if (isFetching) {
-      return handleRetryFetch(true);
-    } else if (isDownloading) {
+    if (isDownloading) {
       return handleRetryDownload(true);
     } else if (isInstalling) {
       return handleRetryInstall(true);
     } else if (isLaunching) {
       return handleLaunch();
     } else {
-      return null;
+      return handleRetryFetch(true);
     }
   }, [state]);
 
