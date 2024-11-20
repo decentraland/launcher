@@ -48,11 +48,7 @@ const config = {
     ],
     hardenedRuntime: true,
     entitlements: 'buildResources/entitlements.mac.plist',
-    extendInfo: [
-      {
-        NSMicrophoneUsageDescription: 'Need microphone access to use voice chat in the application',
-      },
-    ],
+    extendInfo: 'buildResources/Info.plist',
     extraResources: ['icon.icns'],
   },
   dmg: {

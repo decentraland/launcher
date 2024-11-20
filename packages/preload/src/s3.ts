@@ -1,5 +1,6 @@
-import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
-import type { ListObjectsV2Output, S3ClientConfig } from '@aws-sdk/client-s3';
+import { S3Client, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
+import type { ListObjectsV2Output, GetObjectCommandOutput, S3ClientConfig } from '@aws-sdk/client-s3';
+import { Readable } from 'node:stream';
 import { getBucketURL, RELEASE_PREFIX } from '#shared';
 import { getOSName } from './ipc';
 
@@ -33,11 +34,11 @@ if (import.meta.env.VITE_AWS_DEFAULT_REGION) {
 
 const s3 = new S3Client(config);
 
-export async function fetchExplorerReleases(): Promise<ListObjectsV2Output['Contents']> {
+export async function fetchExplorerReleases(version?: string): Promise<ListObjectsV2Output['Contents']> {
   try {
     const params = {
       Bucket: BUCKET,
-      Prefix: RELEASE_PREFIX,
+      Prefix: version ? `${RELEASE_PREFIX}/${version}` : RELEASE_PREFIX,
     };
 
     const data: ListObjectsV2Output = await s3.send(new ListObjectsV2Command(params));
@@ -51,8 +52,28 @@ export async function fetchExplorerReleases(): Promise<ListObjectsV2Output['Cont
   }
 }
 
+export async function fetchExplorerLatestRelease() {
+  try {
+    const params = {
+      Bucket: BUCKET,
+      Key: `${RELEASE_PREFIX}/latest.json`,
+    };
+
+    const response: GetObjectCommandOutput = await s3.send(new GetObjectCommand(params));
+
+    if (response.Body instanceof Readable) {
+      const jsonString = await streamToString(response.Body);
+      return JSON.parse(jsonString);
+    }
+  } catch (err) {
+    console.error('Error Fetching Explorer releases', err);
+    throw err;
+  }
+}
+
 export async function getLatestExplorerRelease(_version?: string, _isPrerelease: boolean = false) {
-  const releases = await fetchExplorerReleases();
+  const latestRelease = await fetchExplorerLatestRelease();
+  const releases = await fetchExplorerReleases(latestRelease['version']);
   const os = (await getOSName()).toLowerCase();
   const release = releases?.find(release => release.Key?.toLowerCase().includes(os));
   if (release && release.Key) {
@@ -63,4 +84,18 @@ export async function getLatestExplorerRelease(_version?: string, _isPrerelease:
       version: versionMatch?.[0] ?? '0.0.0',
     };
   }
+}
+
+/**
+ * Converts a Readable stream to a string.
+ * @param stream The Readable stream to convert.
+ * @returns A promise resolving to the string content of the stream.
+ */
+async function streamToString(stream: Readable): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = []; // Ensure the array is of type Uint8Array
+    stream.on('data', chunk => chunks.push(chunk as Uint8Array)); // Cast each chunk
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8'))); // Use Buffer.concat
+    stream.on('error', reject);
+  });
 }
