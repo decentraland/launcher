@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { CancelError, download } from 'electron-dl';
 import log from 'electron-log/main';
+import semver from 'semver';
 import {
   Analytics,
   IPC_EVENTS,
@@ -48,7 +49,7 @@ function getExplorerBinPath(version?: string): string {
   }
 }
 
-export function isExplorerInstalled(_event: Electron.IpcMainInvokeEvent, version: string) {
+export function isExplorerInstalled(_event: Electron.IpcMainInvokeEvent, version?: string) {
   return fs.existsSync(getExplorerBinPath(version));
 }
 
@@ -162,11 +163,28 @@ export async function installExplorer(event: Electron.IpcMainInvokeEvent, versio
     analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_SUCCESS, { version });
 
     fs.rmSync(filePath);
+    // Delete old versions
+    cleanupVersions();
   } catch (error) {
     log.error('[Main Window][IPC][InstallExplorer] Failed to install app:', error);
     event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
     analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_ERROR, { version });
   }
+}
+
+async function cleanupVersions() {
+  const installations = fs.readdirSync(EXPLORER_PATH).filter(folder => semver.valid(folder));
+  if (installations.length < 1) {
+    return;
+  }
+
+  const sortedVersions = installations.sort(semver.compare);
+  sortedVersions.slice(0, -2).forEach(version => {
+    const folderPath = join(EXPLORER_PATH, version);
+    if (fs.existsSync(folderPath)) {
+      fs.rmSync(folderPath, { recursive: true, force: true });
+    }
+  });
 }
 
 export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version?: string) {

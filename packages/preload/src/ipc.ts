@@ -17,7 +17,7 @@ export function installState(cb: (event: IpcRendererEvent, state: IpcRendererEve
   return ipcRenderer.on(IPC_EVENTS.INSTALL_STATE, cb);
 }
 
-export async function isExplorerInstalled(version: string): Promise<boolean> {
+export async function isExplorerInstalled(version?: string): Promise<boolean> {
   const resp = await ipcRenderer.invoke(IPC_HANDLERS.IS_EXPLORER_INSTALLED, version);
   return resp;
 }
