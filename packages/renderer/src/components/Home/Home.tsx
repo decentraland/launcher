@@ -75,12 +75,16 @@ export const Home: React.FC = memo(() => {
     try {
       const { browser_download_url: url, version } = await getLatestRelease(getVersion(), getIsPrerelease());
       setDownloadUrl(url);
+      // If there is any Explorer version installed, set isInstalled = true
+      setIsInstalled(await isExplorerInstalled());
+
+      // Validates if the version fetched is installed or not to download the new version
       const _isInstalled = await isExplorerInstalled(version);
       if (!_isInstalled) {
         handleDownload(url);
         return;
       }
-      setIsInstalled(true);
+
       setState(AppState.Installed);
 
       const _isUpdated = await isExplorerUpdated(version);
@@ -268,7 +272,7 @@ export const Home: React.FC = memo(() => {
   }, []);
 
   const renderDownloadStep = useCallback(() => {
-    const isUpdating = isInstalling && isInstalled && !isUpdated;
+    const isUpdating = isDownloading && isInstalled && !isUpdated;
 
     return (
       <Box>
