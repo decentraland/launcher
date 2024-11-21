@@ -75,7 +75,9 @@ export async function getLatestExplorerRelease(_version?: string, _isPrerelease:
   const latestRelease = await fetchExplorerLatestRelease();
   const releases = await fetchExplorerReleases(latestRelease['version']);
   const os = (await getOSName()).toLowerCase();
-  const release = releases?.find(release => release.Key?.toLowerCase().includes(os));
+  // TODO: Get different releases based on a flag for provider
+  const releaseName = `_${os}.zip`.toLowerCase();
+  const release = releases?.find(release => release.Key?.toLowerCase().endsWith(releaseName));
   if (release && release.Key) {
     const versionMatch = release.Key.match(/v?\d+\.\d+\.\d+-?\w*/);
 

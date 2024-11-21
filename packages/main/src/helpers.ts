@@ -11,9 +11,9 @@ export function getAppVersion(): string {
 }
 
 export enum PLATFORM {
-  MAC = 'mac',
+  MAC = 'macos',
   LINUX = 'linux',
-  WINDOWS = 'windows',
+  WINDOWS = 'windows64',
   UNSUPPORTED = 'unsupported',
 }
 
