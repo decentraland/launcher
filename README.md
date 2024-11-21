@@ -86,9 +86,17 @@ The CI pipeline is configured to automate the release process for the Decentrala
 
 This streamlined process ensures that updates are consistently and accurately deployed to users.
 
-## Dev Testing with a local explorer build (MacOS)
+## Dev Testing with a non-published/non-latest build
+
+### MacOS
 
 1. Download or make a local build of [The Explorer](https://github.com/decentraland/unity-explorer)
 2. Rename the build `.app` file to `Decentraland.app` and place it in "~/Library/Application\ Support/DecentralandLauncher/Explorer/dev/Decentraland.app"
-3. Grant permissions to the build with `chmod +x ~/Library/Application\ Support/DecentralandLauncher/Explorer/dev/Decentraland.app`
-4. Run the launcher using the dev build, example: `open "decentraland://realm=http://127.0.0.1:8000&position=54,-55&local-scene=true" --args --dev` or `open "decentraland://position=6,-66" --args --dev`
+3. Update permissions to the executable file with `chmod +x ~/Library/Application\ Support/DecentralandLauncher/Explorer/dev/Decentraland.app`
+4. Run the launcher using the dev build, example: `open "decentraland://?realm=http://127.0.0.1:8000&position=0,0&local-scene=true" --args --dev` for connecting it to a local scene, `open "decentraland://?position=6,-66" --args --dev` for connecting to production or `open "decentraland://?realm=YOUR-WORLD.dcl.eth&position=10,15" --args --dev` for connecting directly into 'YOUR-WORLD' world.
+
+### ~WinOS~ (temporarily not available)
+
+1. ~Download or make a local build of [The Explorer](https://github.com/decentraland/unity-explorer)~
+2. ~Place executable file in "C:\Program Files\Decentraland Launcher\Explorer\dev\"~
+3. ~Run the launcher using the dev build, example: `start "decentraland://?realm=http://127.0.0.1:8000&position=0,0&local-scene=true" --args --dev` for connecting it to a local scene, `start "decentraland://?position=6,-66" --args --dev` for connecting to production or `start "decentraland://?realm=YOUR-WORLD.dcl.eth&position=10,15" --args --dev` for connecting directly into 'YOUR-WORLD' world.~
