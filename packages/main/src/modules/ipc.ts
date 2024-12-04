@@ -15,7 +15,7 @@ import {
   getBucketURL,
   RELEASE_PREFIX,
 } from '#shared';
-import { getAppBasePath, decompressFile, getOSName, isAppUpdated, PLATFORM, getAppVersion } from '../helpers';
+import { getAppBasePath, decompressFile, getOSName, isAppUpdated, PLATFORM, getAppVersion, getProvider } from '../helpers';
 import { getUserId } from './config';
 
 const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
@@ -220,6 +220,8 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
       analytics.getAnonymousId(),
       '--session_id',
       analytics.getSessionId(),
+      '--provider',
+      getProvider(),
     ].filter(arg => !!arg);
     log.info('[Main Window][IPC][LaunchExplorer] Opening the Explorer', explorerParams);
     spawn(explorerBinPath, explorerParams, { cwd: explorerBinDir, detached: true, stdio: 'ignore' })
