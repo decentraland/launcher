@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, dirname } from 'path';
 import fs from 'node:fs';
 import { spawn } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
@@ -196,6 +196,7 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
     analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_START, { version: versionData.version });
 
     const explorerBinPath = getExplorerBinPath(version);
+    const explorerBinDir = dirname(explorerBinPath);
 
     if (!fs.existsSync(explorerBinPath)) {
       const errorMessage = version ? `The explorer version specified: ${version} is not installed.` : 'The explorer is not installed.';
@@ -221,7 +222,7 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
       analytics.getSessionId(),
     ].filter(arg => !!arg);
     log.info('[Main Window][IPC][LaunchExplorer] Opening the Explorer', explorerParams);
-    spawn(explorerBinPath, explorerParams, { detached: true, stdio: 'ignore' })
+    spawn(explorerBinPath, explorerParams, { cwd: explorerBinDir, detached: true, stdio: 'ignore' })
       .on('spawn', async () => {
         event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, { type: IPC_EVENT_DATA_TYPE.LAUNCHED });
         await analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_SUCCESS, { version: versionData.version });
