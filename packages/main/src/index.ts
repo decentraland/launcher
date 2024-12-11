@@ -9,7 +9,8 @@ import { getOSName, PLATFORM } from './helpers';
 
 // Initialize Sentry
 Sentry.init({
-  dsn: 'https://47fa1e9f4bfed88d2a4b2bdd7b3d48b6@o4504361728212992.ingest.us.sentry.io/4507924285161472',
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  enabled: import.meta.env.PROD,
 });
 
 // Initialize logger
@@ -65,32 +66,37 @@ app
  */
 function updateAppAndQuit() {
   if (import.meta.env.PROD) {
+    updater.autoUpdater.autoInstallOnAppQuit = true;
     updater.autoUpdater.autoRunAppAfterInstall = false;
+
     updater.autoUpdater.on('checking-for-update', () => {
       log.info('[Main Window][AutoUpdater] Checking for updates');
     });
+
     updater.autoUpdater.on('update-available', _info => {
       log.info('[Main Window][AutoUpdater] Update available');
     });
+
     updater.autoUpdater.on('update-not-available', _info => {
       log.info('[Main Window][AutoUpdater] Update not available');
       app.quit();
     });
+
     updater.autoUpdater.once('download-progress', _info => {
       log.info('[Main Window][AutoUpdater] Downloading update');
     });
+
     updater.autoUpdater.on('update-downloaded', _info => {
       log.info('[Main Window][AutoUpdater] Update downloaded');
-      if (getOSName() === PLATFORM.WINDOWS) {
-        updater.autoUpdater.quitAndInstall(true, false);
-      } else {
-        app.quit();
-      }
+      const silent = getOSName() === PLATFORM.WINDOWS;
+      updater.autoUpdater.quitAndInstall(silent, false);
     });
+
     updater.autoUpdater.on('error', err => {
       log.error('[Main Window][AutoUpdater] Error in auto-updater', err);
       app.quit();
     });
+
     updater.autoUpdater.checkForUpdates();
   } else {
     app.quit();

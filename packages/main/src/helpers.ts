@@ -6,14 +6,16 @@ import JSZip from 'jszip';
 import { extract, list } from 'tar';
 import semver from 'semver';
 
+const DEFAULT_PROVIDER = 'dcl';
+
 export function getAppVersion(): string {
   return app.getVersion();
 }
 
 export enum PLATFORM {
-  MAC = 'mac',
+  MAC = 'macos',
   LINUX = 'linux',
-  WINDOWS = 'windows',
+  WINDOWS = 'windows64',
   UNSUPPORTED = 'unsupported',
 }
 
@@ -164,4 +166,8 @@ export function getAdditionalArguments(): string[] {
 export function compareVersions(version1: string, version2: string) {
   const result = semver.compare(version1, version2);
   return result > 0;
+}
+
+export function getProvider() {
+  return import.meta.env.VITE_PROVIDER || DEFAULT_PROVIDER;
 }

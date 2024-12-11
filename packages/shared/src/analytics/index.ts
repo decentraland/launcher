@@ -3,15 +3,17 @@ import { v4 as uuid } from 'uuid';
 import { type ANALYTICS_EVENTS } from './types';
 
 const APP_ID = 'decentraland-launcher';
-const SEGMENT_KEY = '4gsiGKen1LyWATLxpZpsGI9iGYyAEBAF';
+const SEGMENT_KEY = import.meta.env.VITE_SEGMENT_API_KEY;
 
 const noopAnalytics = {
-  track() {},
+  track(_: Record<string, string>, resolve: () => void) {
+    return resolve();
+  },
 };
 
 export class Analytics {
   private static instance: Analytics | null = null;
-  private analytics: SegmentAnalytics | { track(): void } = noopAnalytics;
+  private analytics: SegmentAnalytics | typeof noopAnalytics = noopAnalytics;
   private anonymousId: string;
   private appId: string = APP_ID;
   private sessionId: string = uuid();
