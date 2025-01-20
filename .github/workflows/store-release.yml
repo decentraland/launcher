@@ -19,7 +19,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ macos-latest, windows-latest ]
-        store: [ itch.io ]
+        store: [ dcl, itch.io ]
 
     runs-on: ${{ matrix.os }}
 
