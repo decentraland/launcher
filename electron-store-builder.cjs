@@ -8,7 +8,7 @@ const config = {
       bucket: process.env.AWS_S3_BUCKET,
       endpoint: process.env.AWS_ENDPOINT_URL,
       region: process.env.AWS_DEFAULT_REGION,
-      path: `/launcher/${process.env.PROVIDER}/releases/${process.env.RELEASE_TAG}/`,
+      path: `/launcher/${process.env.PROVIDER}/`,
     },
   ],
 };
