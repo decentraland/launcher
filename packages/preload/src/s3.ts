@@ -3,7 +3,7 @@ import { getOSName } from './ipc';
 
 export async function fetchExplorerLatestRelease() {
   try {
-    const response = await fetch(`${getBucketURL()}/${RELEASE_PREFIX}/latest.json`);
+    const response = await fetch(`${getBucketURL()}/${RELEASE_PREFIX}/latest.json?_t=${Date.now()}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
