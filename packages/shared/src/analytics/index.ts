@@ -100,6 +100,9 @@ export class Analytics {
         ...this.getProperties(),
         ...eventProps,
       },
+      context: {
+        direct: true,
+      },
     };
 
     return new Promise(resolve => {
