@@ -201,12 +201,7 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
     if (!fs.existsSync(explorerBinPath)) {
       const errorMessage = version ? `The explorer version specified: ${version} is not installed.` : 'The explorer is not installed.';
       log.error(`[Main Window][IPC][LaunchExplorer] ${errorMessage}`, explorerBinPath);
-      event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, {
-        type: IPC_EVENT_DATA_TYPE.ERROR,
-        error: errorMessage,
-      });
-      analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_ERROR, { version: versionData.version });
-      return;
+      throw new Error(errorMessage);
     }
 
     // Validates the explorer binary is executable
@@ -223,28 +218,86 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
       '--provider',
       getProvider(),
     ].filter(arg => !!arg);
-    log.info('[Main Window][IPC][LaunchExplorer] Opening the Explorer', explorerParams);
-    spawn(explorerBinPath, explorerParams, { cwd: explorerBinDir, detached: true, stdio: 'ignore' })
-      .on('spawn', async () => {
-        event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, { type: IPC_EVENT_DATA_TYPE.LAUNCHED });
-        await analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_SUCCESS, { version: versionData.version });
-        await closeWindow();
-      })
-      .on('close', () => {
-        closeWindow();
-      })
-      .on('error', error => {
-        log.error('[Main Window][IPC][OpenApp] Failed to open app:', error);
-        event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, { type: IPC_EVENT_DATA_TYPE.ERROR, error: getErrorMessage(error) });
-        analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_ERROR, { version: versionData.version });
+
+    log.info('[Main Window][IPC][LaunchExplorer] Opening the Explorer', explorerBinPath, explorerParams);
+
+    let hasStarted = false;
+    const maxWaitTime = 10000; // 10 seconds timeout
+
+    const explorerProcess = spawn(explorerBinPath, explorerParams, {
+      cwd: explorerBinDir,
+      detached: true,
+      stdio: 'pipe',
+    });
+
+    await new Promise((resolve, reject) => {
+      // Set up timeout to check if process started
+      const timeout = setTimeout(() => {
+        if (!hasStarted) {
+          const timeoutError = new Error('Process failed to start within timeout');
+          log.error('[Main Window][IPC][LaunchExplorer] ' + timeoutError.message);
+          explorerProcess.kill();
+          reject(timeoutError);
+        }
+      }, maxWaitTime);
+
+      // Capture stdout for debugging
+      explorerProcess.stdout?.on('data', data => {
+        const output = data.toString();
+        log.info('[Main Window][IPC][LaunchExplorer] Process stdout:', output);
       });
+
+      // Capture stderr for debugging
+      explorerProcess.stderr?.on('data', data => {
+        log.error('[Main Window][IPC][LaunchExplorer] Process stderr:', data.toString());
+      });
+
+      explorerProcess
+        .on('spawn', () => {
+          log.info('[Main Window][IPC][LaunchExplorer] Process spawned successfully');
+          hasStarted = true;
+
+          // Wait a bit and check if process is still running
+          setTimeout(() => {
+            // Try to send a signal 0 to check if process is running
+            try {
+              process.kill(explorerProcess.pid!, 0);
+              clearTimeout(timeout);
+              resolve(true);
+            } catch (err) {
+              reject(new Error('Process died shortly after starting'));
+            }
+          }, 2000); // Wait 2 seconds to check if the process is still running
+        })
+        .on('close', (code, signal) => {
+          clearTimeout(timeout);
+          if (!hasStarted) {
+            const closeError = new Error(`Process closed before starting. Code: ${code}, Signal: ${signal}`);
+            log.error('[Main Window][IPC][LaunchExplorer] ' + closeError.message);
+            reject(closeError);
+          }
+        })
+        .on('error', error => {
+          clearTimeout(timeout);
+          log.error('[Main Window][IPC][LaunchExplorer] Failed to open app:', error);
+          reject(error);
+        });
+    });
+
+    // If we get here, Unity is fully initialized
+    log.info('[Main Window][IPC][LaunchExplorer] Explorer launched successfully');
+    event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, { type: IPC_EVENT_DATA_TYPE.LAUNCHED });
+    await analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_SUCCESS, { version: versionData.version });
+    await closeWindow();
   } catch (error) {
-    log.error('[Main Window][IPC][LaunchExplorer] Failed to open app:', error);
+    log.error('[Main Window][IPC][LaunchExplorer] Failed to launch Explorer:', error);
     event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, {
       type: IPC_EVENT_DATA_TYPE.ERROR,
       error: getErrorMessage(error),
     });
-    analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_ERROR, { version: versionData.version });
+    analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_ERROR, {
+      version: versionData.version,
+    });
   }
 }
 
@@ -258,16 +311,18 @@ export function initIpcHandlers() {
   ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
   ipcMain.handle(IPC_HANDLERS.GET_OS_NAME, getOSName);
 
+  // Handle analytics tracking on quit
   app.on('before-quit', async () => {
-    closeWindow();
+    await analytics.track(ANALYTICS_EVENT.LAUNCHER_CLOSE);
+    await analytics.closeAndFlush();
   });
 }
 
 async function closeWindow() {
-  await analytics.track(ANALYTICS_EVENT.LAUNCHER_CLOSE);
-  await analytics.closeAndFlush();
-
   BrowserWindow.getAllWindows()
-    .find(w => !w.isDestroyed())
-    ?.close();
+    .filter(w => !w.isDestroyed())
+    .forEach(window => {
+      window.hide(); // Hide first to prevent flash
+      window.close();
+    });
 }
