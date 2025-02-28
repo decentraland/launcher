@@ -61,11 +61,6 @@ jobs:
           # Sentry AUTH Token
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          # AWS Secrets
-          VITE_AWS_ACCESS_KEY_ID: ${{ secrets.EXPLORER_TEAM_AWS_ACCESS_KEY_ID }}
-          VITE_AWS_SECRET_ACCESS_KEY: ${{ secrets.EXPLORER_TEAM_AWS_SECRET_ACCESS_KEY }}
-          VITE_AWS_DEFAULT_REGION: ${{ secrets.EXPLORER_TEAM_AWS_DEFAULT_REGION }}
-          VITE_AWS_S3_BUCKET: ${{ secrets.EXPLORER_TEAM_S3_BUCKET }}
           VITE_AWS_S3_BUCKET_PUBLIC_URL: ${{ vars.EXPLORER_TEAM_S3_BUCKET_PUBLIC_URL }}
 
       # Download 'SSLcom/esigner-codesign' to a folder called 'esigner-codesign' in the root of the project
