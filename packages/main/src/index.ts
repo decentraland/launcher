@@ -77,6 +77,15 @@ function updateAppAndQuit() {
       log.info('[Main Window][AutoUpdater] Update available');
     });
 
+    updater.autoUpdater.on('update-cancelled', info => {
+      Sentry.captureMessage('Auto-update was cancelled', {
+        level: 'info',
+        extra: {
+          updateInfo: info,
+        },
+      });
+    });
+
     updater.autoUpdater.on('update-not-available', _info => {
       log.info('[Main Window][AutoUpdater] Update not available');
       app.quit();
@@ -94,6 +103,9 @@ function updateAppAndQuit() {
 
     updater.autoUpdater.on('error', err => {
       log.error('[Main Window][AutoUpdater] Error in auto-updater', err);
+
+      Sentry.captureException(err);
+
       app.quit();
     });
 
