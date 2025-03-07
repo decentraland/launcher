@@ -1,14 +1,27 @@
+!include "${BUILD_RESOURCES_DIR}\scripts\tracking.nsh"
+
+# Called at the very start of the installer runtime
+!macro preInit
+    ; Track installation start only once
+    !insertmacro TrackInstallationStart
+!macroend
+
+# Called after all installation steps are completed
 !macro customInstall
   ${ifNot} ${isUpdated}
-    # Makes the app runs as admin
+    ; Ensure app runs as admin
     WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" "$INSTDIR\${APP_FILENAME}.exe" "RUNASADMIN"
 
-    # Delete old registry if exists
+    ; Clean up old registry keys
     DeleteRegKey HKCR "decentraland"
   ${endIf}
+    
+  ; Track successful installation
+  !insertmacro TrackInstallationSuccess
 !macroend
 
 !ifdef BUILD_UNINSTALLER
+  ; Custom uninstaller logic
   Function un.customAtomicRMDir
     Exch $R0
     Push $R1
@@ -66,6 +79,7 @@
   FunctionEnd
 !endif
 
+# Remove files during uninstallation
 !macro customRemoveFiles
   ${if} ${isUpdated}
     CreateDirectory "$PLUGINSDIR\old-install"
@@ -77,7 +91,7 @@
     ${if} $R0 != 0
       DetailPrint "File is busy, aborting: $R0"
 
-      # Attempt to restore previous directory
+      ; Attempt to restore previous directory
       Push ""
       Call un.restoreFiles
       Pop $R0
@@ -89,6 +103,7 @@
   ${endif}
 !macroend
 
+# Custom uninstaller logic
 !macro customUnInstall
   ${ifNot} ${isUpdated}
     DeleteRegKey HKCR "decentraland"
