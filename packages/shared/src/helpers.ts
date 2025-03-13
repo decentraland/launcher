@@ -7,6 +7,8 @@ export function getErrorMessage(error: unknown): string {
     errorMessage = error.toString();
   } else if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
     errorMessage = error.message;
+  } else if (typeof error === 'string') {
+    errorMessage = error;
   } else {
     errorMessage = 'Unknown error';
   }
