@@ -2,10 +2,13 @@ import { app } from 'electron';
 import updater from 'electron-updater';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
+import { Analytics, ANALYTICS_EVENT, getErrorMessage } from '#shared';
+import { getUserId } from './modules/config';
+import { initIpcHandlers } from './modules/ipc';
 import { initProtocol } from './modules/protocol';
 import { restoreOrCreateWindow } from './mainWindow';
+import { getAppVersion, getOSName, PLATFORM } from './helpers';
 import './security-restrictions';
-import { getOSName, PLATFORM } from './helpers';
 
 // Initialize Sentry
 Sentry.init({
@@ -17,8 +20,7 @@ Sentry.init({
 log.transports.file.setAppName('DecentralandLauncher');
 log.initialize();
 
-// Initialize protocol (deep link)
-initProtocol();
+const analytics = new Analytics(getUserId(), getOSName(), getAppVersion());
 
 /**
  * Prevent electron from running multiple instances.
@@ -52,7 +54,14 @@ app.on('activate', restoreOrCreateWindow);
  */
 app
   .whenReady()
-  .then(restoreOrCreateWindow)
+  .then(() => {
+    analytics.track(ANALYTICS_EVENT.LAUNCHER_OPEN, { version: getAppVersion() });
+
+    initProtocol();
+    initIpcHandlers();
+
+    restoreOrCreateWindow();
+  })
   .catch(e => console.error('Failed create window:', e));
 
 /**
@@ -68,16 +77,21 @@ function updateAppAndQuit() {
   if (import.meta.env.PROD) {
     updater.autoUpdater.autoInstallOnAppQuit = true;
     updater.autoUpdater.autoRunAppAfterInstall = false;
+    let version = '';
 
     updater.autoUpdater.on('checking-for-update', () => {
       log.info('[Main Window][AutoUpdater] Checking for updates');
     });
 
-    updater.autoUpdater.on('update-available', _info => {
-      log.info('[Main Window][AutoUpdater] Update available');
+    updater.autoUpdater.on('update-available', info => {
+      version = info.version;
+      log.info('[Main Window][AutoUpdater] Update available', version);
+      analytics.track(ANALYTICS_EVENT.LAUNCHER_UPDATE_AVAILABLE, { version });
     });
 
     updater.autoUpdater.on('update-cancelled', info => {
+      log.info('[Main Window][AutoUpdater] Update cancelled', info.version);
+      analytics.track(ANALYTICS_EVENT.LAUNCHER_UPDATE_CANCELLED, { version: info.version });
       Sentry.captureMessage('Auto-update was cancelled', {
         level: 'info',
         extra: {
@@ -95,15 +109,16 @@ function updateAppAndQuit() {
       log.info('[Main Window][AutoUpdater] Downloading update');
     });
 
-    updater.autoUpdater.on('update-downloaded', _info => {
-      log.info('[Main Window][AutoUpdater] Update downloaded');
+    updater.autoUpdater.on('update-downloaded', info => {
+      log.info('[Main Window][AutoUpdater] Update downloaded', info.version);
+      analytics.track(ANALYTICS_EVENT.LAUNCHER_UPDATE_DOWNLOADED, { version: info.version });
       const silent = getOSName() === PLATFORM.WINDOWS;
       updater.autoUpdater.quitAndInstall(silent, false);
     });
 
     updater.autoUpdater.on('error', err => {
-      log.error('[Main Window][AutoUpdater] Error in auto-updater', err);
-
+      log.error('[Main Window][AutoUpdater] Error in auto-updater', getErrorMessage(err));
+      analytics.track(ANALYTICS_EVENT.LAUNCHER_UPDATE_ERROR, { version: version, error: getErrorMessage(err) });
       Sentry.captureException(err);
 
       app.quit();

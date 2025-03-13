@@ -1,12 +1,11 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow } from 'electron';
-import { initIpcHandlers } from './modules/ipc';
 import { getAppIcon, getAdditionalArguments } from './helpers';
 
-async function createWindow() {
-  initIpcHandlers();
+let activeDownloads: Electron.DownloadItem[] = [];
 
+async function createWindow() {
   const browserWindow = new BrowserWindow({
     show: false, // Use the 'ready-to-show' event to show the instantiated BrowserWindow.
     width: 1006, // 990+16 border
@@ -86,7 +85,6 @@ export async function restoreOrCreateWindow() {
   window.focus();
 
   // Listen to active downloads and cancel them when the window is closed.
-  let activeDownloads: Electron.DownloadItem[] = [];
   window.webContents.session.on('will-download', (_, item) => {
     activeDownloads.push(item);
     item.on('done', () => {
