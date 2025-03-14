@@ -23,14 +23,13 @@ export function initProtocol() {
     }
   }
 
-  app.whenReady().then(() => {
-    if (process.argv.length > 0) {
-      const url = process.argv.find(arg => arg.startsWith(`${PROTOCOL}://`));
-      if (url) {
-        handleProtocol(url);
-      }
+  // Check for protocol in argv immediately if we're already ready
+  if (app.isReady() && process.argv.length > 0) {
+    const url = process.argv.find(arg => arg.startsWith(`${PROTOCOL}://`));
+    if (url) {
+      handleProtocol(url);
     }
-  });
+  }
 
   // Windows and Linux
   app.on('second-instance', (_, argv) => {

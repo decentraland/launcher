@@ -1,7 +1,7 @@
 import { join, dirname } from 'path';
 import fs from 'node:fs';
 import { spawn } from 'child_process';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { BrowserWindow, ipcMain } from 'electron';
 import { CancelError, download } from 'electron-dl';
 import log from 'electron-log/main';
 import semver from 'semver';
@@ -58,6 +58,8 @@ export function isExplorerUpdated(event: Electron.IpcMainInvokeEvent, version: s
 }
 
 export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: string) {
+  let version: string | undefined = 'unknown';
+
   try {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return;
@@ -65,7 +67,7 @@ export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: 
     log.info('[Main Window][IPC][DownloadExplorer] Downloading', url);
 
     const versionPattern = new RegExp(`(^${getBucketURL()}\\/\\${RELEASE_PREFIX})\\/(v?\\d+\\.\\d+\\.\\d+-?\\w*)\\/(\\w+.zip)$`);
-    const version = url.match(versionPattern)?.[2];
+    version = url.match(versionPattern)?.[2];
 
     if (!version) {
       log.error('[Main Window][IPC][DownloadExplorer] No valid url provided');
@@ -73,6 +75,7 @@ export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: 
         type: IPC_EVENT_DATA_TYPE.ERROR,
         error: 'No version provided',
       });
+      await analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION_ERROR, { version, error: 'No version provided' });
       return;
     }
 
@@ -85,7 +88,7 @@ export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: 
             type: IPC_EVENT_DATA_TYPE.START,
             progress: 0,
           });
-          analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION, { version });
+          analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION, { version: version as string });
         },
         onProgress: progress => {
           event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
@@ -94,13 +97,13 @@ export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: 
           });
         },
         onCompleted: () => {
-          event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.COMPLETED, version });
+          event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.COMPLETED, version: version as string });
+          analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION_SUCCESS, { version: version as string });
         },
         onCancel: () => {
           event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
             type: IPC_EVENT_DATA_TYPE.CANCELLED,
           });
-          log.error('[Main Window][IPC][DownloadExplorer] Download Cancelled');
         },
       });
       return JSON.stringify(resp);
@@ -110,13 +113,16 @@ export async function downloadExplorer(event: Electron.IpcMainInvokeEvent, url: 
         type: IPC_EVENT_DATA_TYPE.ERROR,
         error: 'No URL provided',
       });
+      await analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION_ERROR, { version, error: 'No URL provided' });
     }
   } catch (error) {
     if (error instanceof CancelError) {
       log.error('[Main Window][IPC][DownloadExplorer] Download Cancelled');
+      await analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION_CANCELLED, { version: version as string });
     } else {
-      log.error('[Main Window][IPC][DownloadExplorer] Error Downloading', url, error);
+      log.error('[Main Window][IPC][DownloadExplorer] Error Downloading', url, getErrorMessage(error));
       event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
+      await analytics.track(ANALYTICS_EVENT.DOWNLOAD_VERSION_ERROR, { version, error: getErrorMessage(error) });
     }
   }
 
@@ -166,7 +172,7 @@ export async function installExplorer(event: Electron.IpcMainInvokeEvent, versio
     // Delete old versions
     cleanupVersions();
   } catch (error) {
-    log.error('[Main Window][IPC][InstallExplorer] Failed to install app:', error);
+    log.error('[Main Window][IPC][InstallExplorer] Failed to install app:', getErrorMessage(error));
     event.sender.send(IPC_EVENTS.INSTALL_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
     analytics.track(ANALYTICS_EVENT.INSTALL_VERSION_ERROR, { version });
   }
@@ -290,7 +296,7 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
     await analytics.track(ANALYTICS_EVENT.LAUNCH_CLIENT_SUCCESS, { version: versionData.version });
     await closeWindow();
   } catch (error) {
-    log.error('[Main Window][IPC][LaunchExplorer] Failed to launch Explorer:', error);
+    log.error('[Main Window][IPC][LaunchExplorer] Failed to launch Explorer:', getErrorMessage(error));
     event.sender.send(IPC_EVENTS.LAUNCH_EXPLORER, {
       type: IPC_EVENT_DATA_TYPE.ERROR,
       error: getErrorMessage(error),
@@ -302,20 +308,12 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
 }
 
 export function initIpcHandlers() {
-  analytics.track(ANALYTICS_EVENT.LAUNCHER_OPEN);
-
   ipcMain.handle(IPC_HANDLERS.DOWNLOAD_EXPLORER, downloadExplorer);
   ipcMain.handle(IPC_HANDLERS.INSTALL_EXPLORER, installExplorer);
   ipcMain.handle(IPC_HANDLERS.LAUNCH_EXPLORER, launchExplorer);
   ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_INSTALLED, isExplorerInstalled);
   ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
   ipcMain.handle(IPC_HANDLERS.GET_OS_NAME, getOSName);
-
-  // Handle analytics tracking on quit
-  app.on('before-quit', async () => {
-    await analytics.track(ANALYTICS_EVENT.LAUNCHER_CLOSE);
-    await analytics.closeAndFlush();
-  });
 }
 
 async function closeWindow() {

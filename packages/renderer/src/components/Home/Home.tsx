@@ -48,7 +48,7 @@ async function getLatestRelease(version?: string, isPrerelease: boolean = false)
 
     throw new Error('No asset found for your platform');
   } catch (error) {
-    log.error('[Renderer][Home][GetLatestRelease]', error);
+    log.error('[Renderer][Home][GetLatestRelease]', getErrorMessage(error));
     throw new Error('Failed to fetch latest release');
   }
 }
@@ -134,7 +134,7 @@ export const Home: React.FC = memo(() => {
           break;
         case IPC_EVENT_DATA_TYPE.ERROR:
           setError((eventData as IpcRendererEventDataError).error);
-          log.error('[Renderer][Home][HandleLaunchState]', (eventData as IpcRendererEventDataError).error);
+          log.error('[Renderer][Home][HandleLaunchState]', getErrorMessage((eventData as IpcRendererEventDataError).error));
           break;
       }
     },
@@ -173,7 +173,7 @@ export const Home: React.FC = memo(() => {
           break;
         case IPC_EVENT_DATA_TYPE.ERROR:
           setError((eventData as IpcRendererEventDataError).error);
-          log.error('[Renderer][Home][HandleInstallState]', (eventData as IpcRendererEventDataError).error);
+          log.error('[Renderer][Home][HandleInstallState]', getErrorMessage((eventData as IpcRendererEventDataError).error));
           handleRetryInstall();
           break;
       }
@@ -232,7 +232,7 @@ export const Home: React.FC = memo(() => {
         }
         case IPC_EVENT_DATA_TYPE.ERROR:
           setError((eventData as IpcRendererEventDataError).error);
-          log.error('[Renderer][Home][HandleDownloadState]', (eventData as IpcRendererEventDataError).error);
+          log.error('[Renderer][Home][HandleDownloadState]', getErrorMessage((eventData as IpcRendererEventDataError).error));
           handleRetryDownload();
           break;
       }
