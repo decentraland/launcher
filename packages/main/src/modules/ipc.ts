@@ -1,7 +1,7 @@
 import { join, dirname } from 'path';
 import fs from 'node:fs';
 import { spawn } from 'child_process';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { BrowserWindow, ipcMain } from 'electron';
 import { CancelError, download } from 'electron-dl';
 import log from 'electron-log/main';
 import semver from 'semver';
@@ -314,12 +314,6 @@ export function initIpcHandlers() {
   ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_INSTALLED, isExplorerInstalled);
   ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
   ipcMain.handle(IPC_HANDLERS.GET_OS_NAME, getOSName);
-
-  // Handle analytics tracking on quit
-  app.on('before-quit', async () => {
-    await analytics.track(ANALYTICS_EVENT.LAUNCHER_CLOSE, { version: getAppVersion() });
-    await analytics.closeAndFlush();
-  });
 }
 
 async function closeWindow() {

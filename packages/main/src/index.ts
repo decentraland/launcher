@@ -64,6 +64,11 @@ app
   })
   .catch(e => console.error('Failed create window:', e));
 
+// Handle analytics tracking on quit
+app.on('before-quit', async () => {
+  await analytics.track(ANALYTICS_EVENT.LAUNCHER_CLOSE, { version: getAppVersion() });
+  await analytics.closeAndFlush();
+});
 /**
  * Check for app updates, install it in background and notify user that new version was installed.
  * No reason run this in non-production build.
@@ -81,6 +86,7 @@ function updateAppAndQuit() {
 
     updater.autoUpdater.on('checking-for-update', () => {
       log.info('[Main Window][AutoUpdater] Checking for updates');
+      analytics.track(ANALYTICS_EVENT.LAUNCHER_UPDATE_CHECKING);
     });
 
     updater.autoUpdater.on('update-available', info => {
@@ -102,6 +108,7 @@ function updateAppAndQuit() {
 
     updater.autoUpdater.on('update-not-available', _info => {
       log.info('[Main Window][AutoUpdater] Update not available');
+      analytics.track(ANALYTICS_EVENT.LAUNCHER_UPDATE_NOT_AVAILABLE);
       app.quit();
     });
 
