@@ -11,7 +11,9 @@ export enum ANALYTICS_EVENT {
   LAUNCH_CLIENT_START = 'Launch Client Start',
   LAUNCH_CLIENT_SUCCESS = 'Launch Client Success',
   LAUNCH_CLIENT_ERROR = 'Launch Client Error',
+  LAUNCHER_UPDATE_CHECKING = 'Launcher Update Checking',
   LAUNCHER_UPDATE_AVAILABLE = 'Launcher Update Available',
+  LAUNCHER_UPDATE_NOT_AVAILABLE = 'Launcher Update Not Available',
   LAUNCHER_UPDATE_CANCELLED = 'Launcher Update Cancelled',
   LAUNCHER_UPDATE_ERROR = 'Launcher Update Error',
   LAUNCHER_UPDATE_DOWNLOADED = 'Launcher Update Downloaded',
@@ -55,9 +57,11 @@ export type ANALYTICS_EVENTS = {
   [ANALYTICS_EVENT.LAUNCH_CLIENT_ERROR]: {
     version: string;
   };
+  [ANALYTICS_EVENT.LAUNCHER_UPDATE_CHECKING]: void;
   [ANALYTICS_EVENT.LAUNCHER_UPDATE_AVAILABLE]: {
     version: string;
   };
+  [ANALYTICS_EVENT.LAUNCHER_UPDATE_NOT_AVAILABLE]: void;
   [ANALYTICS_EVENT.LAUNCHER_UPDATE_CANCELLED]: {
     version: string;
   };
