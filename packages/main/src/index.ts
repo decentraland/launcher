@@ -55,6 +55,7 @@ app.on('activate', restoreOrCreateWindow);
 app
   .whenReady()
   .then(() => {
+    log.info('[Main Window][App Ready] Launcher version', getAppVersion());
     analytics.track(ANALYTICS_EVENT.LAUNCHER_OPEN, { version: getAppVersion() });
 
     initProtocol();
