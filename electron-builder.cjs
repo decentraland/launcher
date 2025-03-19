@@ -49,7 +49,7 @@ const config = {
     '!node_modules/date-fns/**/**',
     '!node_modules/caniuse-lite/**/**',
     '!node_modules/@emotion/**/**',
-    '!node_modules/@sentry/cli-darwin/**',
+    '!node_modules/@sentry/cli-*/**',
     '!node_modules/@sentry/react/**',
   ],
   compression: 'store',
