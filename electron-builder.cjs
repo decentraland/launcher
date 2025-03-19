@@ -49,10 +49,8 @@ const config = {
     '!node_modules/date-fns/**/**',
     '!node_modules/caniuse-lite/**/**',
     '!node_modules/@emotion/**/**',
-    '!node_modules/@sentry/**/**',
-    'node_modules/@sentry/electron/**',
-    'node_modules/@sentry/core/**',
-    'node_modules/@sentry/node/**',
+    '!node_modules/@sentry/cli-darwin/**',
+    '!node_modules/@sentry/react/**',
   ],
   compression: 'store',
   win: {
@@ -142,18 +140,24 @@ const config = {
       console.log('✅ Debug symbols removed.');
     }
   },
-  afterAllArtifactBuild: async buildResult => {
+  artifactBuildCompleted: async buildResult => {
     if (process.platform === 'darwin' && process.env.MODE === 'production') {
-      const { artifactPaths } = buildResult;
-      const dmgPaths = artifactPaths.filter(path => path.endsWith('.dmg'));
+      const { file } = buildResult;
 
-      for (const dmgPath of dmgPaths) {
+      if (file && file.endsWith('.dmg')) {
+        const dmgPath = file;
         console.log(`🗜️ Compressing DMG file: ${dmgPath}`);
         const compressedPath = `${dmgPath.slice(0, -4)}-compressed.dmg`;
         execSync(`hdiutil convert "${dmgPath}" -format UDBZ -imagekey zlib-level=9 -o "${compressedPath}"`);
+
+        const beforeSize = execSync(`du -sh "${dmgPath}"`).toString().trim();
+        const afterSize = execSync(`du -sh "${compressedPath}"`).toString().trim();
+        console.log(`✅ Size reduction: ${beforeSize} → ${afterSize}`);
+
         fs.renameSync(compressedPath, dmgPath);
       }
     }
+    return true;
   },
 };
 
