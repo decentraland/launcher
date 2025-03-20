@@ -28,7 +28,7 @@ vi.mock('electron', () => {
     },
   };
 
-  const app: Pick<Electron.App, 'getAppPath' | 'getPath' | 'getVersion' | 'on'> = {
+  const app: Pick<Electron.App, 'getAppPath' | 'getPath' | 'getVersion' | 'on' | 'whenReady'> = {
     getAppPath(): string {
       return '';
     },
@@ -39,6 +39,7 @@ vi.mock('electron', () => {
       return '1.0.0';
     },
     on: vi.fn(),
+    whenReady: vi.fn(),
   };
 
   const ipcMain: Pick<Electron.IpcMain, 'handle'> = {

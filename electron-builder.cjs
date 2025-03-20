@@ -1,4 +1,6 @@
 const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const config = {
   productName: 'Decentraland Launcher',
@@ -8,7 +10,49 @@ const config = {
     output: 'dist',
     buildResources: 'buildResources',
   },
-  files: ['packages/**/dist/**'],
+  files: [
+    'packages/**/dist/**',
+    'package.json',
+    'node_modules/**/*',
+    '!node_modules/.bin/**',
+    '!**/*.{map,md,markdown,txt}',
+    '!**/{test,tests,example,examples,docs,doc}/**',
+    '!**/{.DS_Store,LICENSE,license,README,CHANGELOG}*',
+    '!node_modules/*/{test,tests,example,examples,docs,doc}/**',
+    '!node_modules/**/*.{md,markdown,html,txt}',
+    '!node_modules/**/*.d.ts',
+    '!node_modules/**/*.map',
+    '!node_modules/**/LICENSE*',
+    '!node_modules/**/license*',
+    '!node_modules/**/CHANGELOG*',
+    '!node_modules/**/README*',
+    '!node_modules/**/.DS_Store',
+    '!node_modules/@types/**',
+    '!node_modules/typescript/**',
+    '!node_modules/eslint*/**',
+    '!node_modules/@typescript-eslint/**',
+    '!node_modules/prettier/**',
+    '!node_modules/jest/**',
+    '!node_modules/@jest/**',
+    '!node_modules/ts-jest/**',
+    '!node_modules/vitest/**',
+    '!node_modules/happy-dom/**',
+    '!node_modules/playwright/**',
+    '!node_modules/electron/**',
+    '!node_modules/electron-builder/**',
+    '!node_modules/app-builder-*/**',
+    '!node_modules/@sentry/wizard/**',
+    '!node_modules/@babel/**/**',
+    '!node_modules/@mui/**/**',
+    '!node_modules/react-dom/**/**',
+    '!node_modules/decentraland-ui2/**/**',
+    '!node_modules/date-fns/**/**',
+    '!node_modules/caniuse-lite/**/**',
+    '!node_modules/@emotion/**/**',
+    '!node_modules/@sentry/cli-*/**',
+    '!node_modules/@sentry/react/**',
+  ],
+  compression: 'store',
   win: {
     publisherName: 'Decentraland Foundation',
     appId: 'Decentraland.Launcher',
@@ -54,6 +98,7 @@ const config = {
   dmg: {
     title: 'Decentraland Launcher Installer',
     background: 'buildResources/background.png',
+    format: 'UDZO',
     window: {
       width: 714,
       height: 472,
@@ -84,6 +129,36 @@ const config = {
       schemes: ['decentraland'],
     },
   ],
+  afterPack: async context => {
+    if (process.platform === 'darwin' && process.env.MODE === 'production') {
+      const { appOutDir, packager } = context;
+      const appName = packager.appInfo.productFilename;
+      const appPath = path.join(appOutDir, `${appName}.app/Contents/MacOS/${appName}`);
+
+      console.log('⚙️ Stripping debug symbols...');
+      execSync(`strip "${appPath}"`);
+      console.log('✅ Debug symbols removed.');
+    }
+  },
+  artifactBuildCompleted: async buildResult => {
+    if (process.platform === 'darwin' && process.env.MODE === 'production') {
+      const { file } = buildResult;
+
+      if (file && file.endsWith('.dmg')) {
+        const dmgPath = file;
+        console.log(`🗜️ Compressing DMG file: ${dmgPath}`);
+        const compressedPath = `${dmgPath.slice(0, -4)}-compressed.dmg`;
+        execSync(`hdiutil convert "${dmgPath}" -format UDBZ -imagekey zlib-level=9 -o "${compressedPath}"`);
+
+        const beforeSize = execSync(`du -sh "${dmgPath}"`).toString().trim();
+        const afterSize = execSync(`du -sh "${compressedPath}"`).toString().trim();
+        console.log(`✅ Size reduction: ${beforeSize} → ${afterSize}`);
+
+        fs.renameSync(compressedPath, dmgPath);
+      }
+    }
+    return true;
+  },
 };
 
 // Sign Windows .exe
