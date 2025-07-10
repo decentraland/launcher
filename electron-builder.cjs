@@ -1,3 +1,5 @@
+/** @type {import('electron-builder').Configuration} */
+
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -129,6 +131,28 @@ const config = {
       schemes: ['decentraland'],
     },
   ],
+  beforePack: async context => {
+    // If the platform is Windows or Mac ARM, we need to rename the launcher to outdated
+    const arch = context.arch;
+    const platform = context.electronPlatformName;
+
+    const isOutdated = (platform === 'darwin' && arch === 3) || platform === 'win';
+
+    if (!isOutdated) {
+      return;
+    }
+
+    const newName = 'Decentraland Outdated Launcher';
+
+    context.packager.config.productName = newName;
+    context.packager.config.executableName = newName;
+    context.packager.config.artifactName = `${newName}-\${os}-\${arch}.\${ext}`;
+    if (platform === 'mac') {
+      context.packager.config.mac.dmg = {
+        title: `${newName} Installer`,
+      };
+    }
+  },
   afterPack: async context => {
     if (process.platform === 'darwin' && process.env.MODE === 'production') {
       const { appOutDir, packager } = context;
