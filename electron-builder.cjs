@@ -147,10 +147,8 @@ const config = {
     context.packager.config.productName = newName;
     context.packager.config.executableName = newName;
     context.packager.config.artifactName = `${newName}-\${os}-\${arch}.\${ext}`;
-    if (platform === 'mac') {
-      context.packager.config.mac.dmg = {
-        title: `${newName} Installer`,
-      };
+    if (platform === 'darwin') {
+      context.packager.config.dmg.title = `${newName} Installer`;
     }
   },
   afterPack: async context => {
