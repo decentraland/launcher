@@ -3,6 +3,7 @@
  */
 import {
   downloadExplorer,
+  downloadLauncher,
   downloadState,
   installExplorer,
   installState,
@@ -16,6 +17,7 @@ import { getLatestExplorerRelease } from './s3';
 import { getPlatform, getArch, getOSName } from './platform';
 export {
   downloadExplorer,
+  downloadLauncher,
   downloadState,
   installExplorer,
   installState,

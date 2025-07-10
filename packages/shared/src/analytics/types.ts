@@ -17,6 +17,10 @@ export enum ANALYTICS_EVENT {
   LAUNCHER_UPDATE_CANCELLED = 'Launcher Update Cancelled',
   LAUNCHER_UPDATE_ERROR = 'Launcher Update Error',
   LAUNCHER_UPDATE_DOWNLOADED = 'Launcher Update Downloaded',
+  DOWNLOAD_LAUNCHER = 'Download New Launcher',
+  DOWNLOAD_LAUNCHER_SUCCESS = 'Download New Launcher Success',
+  DOWNLOAD_LAUNCHER_ERROR = 'Download New Launcher Error',
+  DOWNLOAD_LAUNCHER_CANCELLED = 'Download New Launcher Cancelled',
 }
 
 export type ANALYTICS_EVENTS = {
@@ -72,4 +76,10 @@ export type ANALYTICS_EVENTS = {
   [ANALYTICS_EVENT.LAUNCHER_UPDATE_DOWNLOADED]: {
     version: string;
   };
+  [ANALYTICS_EVENT.DOWNLOAD_LAUNCHER]: void;
+  [ANALYTICS_EVENT.DOWNLOAD_LAUNCHER_SUCCESS]: void;
+  [ANALYTICS_EVENT.DOWNLOAD_LAUNCHER_ERROR]: {
+    error: string;
+  };
+  [ANALYTICS_EVENT.DOWNLOAD_LAUNCHER_CANCELLED]: void;
 };

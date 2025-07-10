@@ -14,8 +14,19 @@ import {
   getErrorMessage,
   getBucketURL,
   RELEASE_PREFIX,
+  PLATFORM,
 } from '#shared';
-import { getAppBasePath, decompressFile, getOSName, isAppUpdated, PLATFORM, getAppVersion, getProvider } from '../helpers';
+import {
+  getAppBasePath,
+  decompressFile,
+  getAppVersion,
+  getProvider,
+  isAppUpdated,
+  getArch,
+  getPlatform,
+  getOSName,
+  getDownloadsPath,
+} from '../helpers';
 import { getUserId } from './config';
 
 const EXPLORER_PATH = join(getAppBasePath(), 'Explorer');
@@ -26,6 +37,7 @@ const EXPLORER_LATEST_VERSION_PATH = join(EXPLORER_PATH, 'latest');
 const EXPLORER_DEV_VERSION_PATH = join(EXPLORER_PATH, 'dev');
 const EXPLORER_MAC_BIN_PATH = '/Decentraland.app/Contents/MacOS/Explorer';
 const EXPLORER_WIN_BIN_PATH = '/Decentraland.exe';
+const LAUNCHER_BASE_URL = 'https://explorer-artifacts.decentraland.org/launcher-rust';
 
 const analytics = new Analytics(getUserId(), getOSName(), getAppVersion());
 
@@ -307,13 +319,84 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
   }
 }
 
+export async function downloadLauncher(event: Electron.IpcMainInvokeEvent) {
+  const osName = getOSName();
+  let url = '';
+
+  if (osName === PLATFORM.MAC) {
+    url = `${LAUNCHER_BASE_URL}/Decentraland_aarch64.dmg`;
+  } else if (osName === PLATFORM.WINDOWS) {
+    url = `${LAUNCHER_BASE_URL}/Decentraland_x64-setup.exe`;
+  } else {
+    log.error('[Main Window][IPC][DownloadLauncher] Unsupported OS');
+    return;
+  }
+
+  try {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return;
+
+    log.info('[Main Window][IPC][DownloadLauncher] Downloading', url);
+
+    if (url) {
+      const resp = await download(win, url, {
+        directory: getDownloadsPath(),
+        onStarted: _item => {
+          event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
+            type: IPC_EVENT_DATA_TYPE.START,
+            progress: 0,
+          });
+          analytics.track(ANALYTICS_EVENT.DOWNLOAD_LAUNCHER);
+        },
+        onProgress: progress => {
+          event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
+            type: IPC_EVENT_DATA_TYPE.PROGRESS,
+            progress: progress.percent * 100,
+          });
+        },
+        onCompleted: () => {
+          event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.COMPLETED });
+          analytics.track(ANALYTICS_EVENT.DOWNLOAD_LAUNCHER_SUCCESS);
+        },
+        onCancel: () => {
+          event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
+            type: IPC_EVENT_DATA_TYPE.CANCELLED,
+          });
+        },
+      });
+      return JSON.stringify(resp);
+    } else {
+      log.error('[Main Window][IPC][DownloadLauncher] No URL provided');
+      event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
+        type: IPC_EVENT_DATA_TYPE.ERROR,
+        error: 'No URL provided',
+      });
+      await analytics.track(ANALYTICS_EVENT.DOWNLOAD_LAUNCHER_ERROR, { error: 'No URL provided' });
+    }
+  } catch (error) {
+    if (error instanceof CancelError) {
+      log.error('[Main Window][IPC][DownloadLauncher] Download Cancelled');
+      await analytics.track(ANALYTICS_EVENT.DOWNLOAD_LAUNCHER_CANCELLED);
+    } else {
+      log.error('[Main Window][IPC][DownloadLauncher] Error Downloading', url, getErrorMessage(error));
+      event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, { type: IPC_EVENT_DATA_TYPE.ERROR, error });
+      await analytics.track(ANALYTICS_EVENT.DOWNLOAD_LAUNCHER_ERROR, { error: getErrorMessage(error) });
+    }
+  }
+
+  return null;
+}
+
 export function initIpcHandlers() {
   ipcMain.handle(IPC_HANDLERS.DOWNLOAD_EXPLORER, downloadExplorer);
   ipcMain.handle(IPC_HANDLERS.INSTALL_EXPLORER, installExplorer);
   ipcMain.handle(IPC_HANDLERS.LAUNCH_EXPLORER, launchExplorer);
   ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_INSTALLED, isExplorerInstalled);
   ipcMain.handle(IPC_HANDLERS.IS_EXPLORER_UPDATED, isExplorerUpdated);
+  ipcMain.handle(IPC_HANDLERS.DOWNLOAD_LAUNCHER, downloadLauncher);
+  ipcMain.handle(IPC_HANDLERS.GET_PLATFORM, getPlatform);
   ipcMain.handle(IPC_HANDLERS.GET_OS_NAME, getOSName);
+  ipcMain.handle(IPC_HANDLERS.GET_ARCH, getArch);
 }
 
 async function closeWindow() {

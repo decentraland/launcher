@@ -45,6 +45,10 @@ export function getAppBasePath(): string {
   return osName === PLATFORM.WINDOWS ? dirname(app.getPath('exe')) : join(app.getPath('appData'), applicationFolderName);
 }
 
+export function getDownloadsPath(): string {
+  return join(app.getPath('downloads'));
+}
+
 export function getAppIcon(): string {
   const osName = getOSName();
   if (![PLATFORM.MAC, PLATFORM.WINDOWS].includes(osName)) {

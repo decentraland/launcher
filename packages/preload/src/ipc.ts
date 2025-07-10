@@ -5,6 +5,10 @@ export function downloadExplorer(url: string) {
   ipcRenderer.invoke(IPC_HANDLERS.DOWNLOAD_EXPLORER, url);
 }
 
+export function downloadLauncher() {
+  ipcRenderer.invoke(IPC_HANDLERS.DOWNLOAD_LAUNCHER);
+}
+
 export function downloadState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
   return ipcRenderer.on(IPC_EVENTS.DOWNLOAD_STATE, cb);
 }
