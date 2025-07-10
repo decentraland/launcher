@@ -1,6 +1,6 @@
 import { IpcRendererEvent } from 'electron';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Button, Typography } from 'decentraland-ui2';
+import { Box, Button, Container, Typography } from 'decentraland-ui2';
 import log from 'electron-log/renderer';
 import {
   downloadExplorer,
@@ -358,21 +358,23 @@ export const Home: React.FC = memo(() => {
   }, [error, retry, state]);
 
   return (
-    <Box display="flex" alignItems={'center'} justifyContent={'center'} width={'100%'}>
-      <Landscape>
-        <img src={LANDSCAPE_IMG} />
-      </Landscape>
-      {error
-        ? renderError()
-        : isFetching
-          ? renderFetchStep()
-          : isDownloading
-            ? renderDownloadStep()
-            : isInstalling
-              ? renderInstallStep()
-              : isLaunching
-                ? renderLaunchStep()
-                : null}
-    </Box>
+    <Container fixed sx={{ display: 'flex', height: '100vh' }}>
+      <Box display="flex" alignItems={'center'} justifyContent={'center'} width={'100%'}>
+        <Landscape>
+          <img src={LANDSCAPE_IMG} />
+        </Landscape>
+        {error
+          ? renderError()
+          : isFetching
+            ? renderFetchStep()
+            : isDownloading
+              ? renderDownloadStep()
+              : isInstalling
+                ? renderInstallStep()
+                : isLaunching
+                  ? renderLaunchStep()
+                  : null}
+      </Box>
+    </Container>
   );
 });
