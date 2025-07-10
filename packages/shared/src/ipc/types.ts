@@ -4,7 +4,9 @@ export enum IPC_HANDLERS {
   IS_EXPLORER_INSTALLED = 'is-explorer-installed',
   IS_EXPLORER_UPDATED = 'is-explorer-updated',
   LAUNCH_EXPLORER = 'launch-explorer',
+  GET_PLATFORM = 'get-platform',
   GET_OS_NAME = 'get-os-name',
+  GET_ARCH = 'get-arch',
 }
 
 export enum IPC_EVENTS {

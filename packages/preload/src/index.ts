@@ -10,10 +10,10 @@ import {
   launchState,
   isExplorerInstalled,
   isExplorerUpdated,
-  getOSName,
 } from './ipc';
 import { getVersion, getIsPrerelease, getRunDevVersion, getDownloadedFilePath } from './argvs';
 import { getLatestExplorerRelease } from './s3';
+import { getPlatform, getArch, getOSName } from './platform';
 export {
   downloadExplorer,
   downloadState,
@@ -29,4 +29,6 @@ export {
   getRunDevVersion,
   getDownloadedFilePath,
   getLatestExplorerRelease,
+  getPlatform,
+  getArch,
 };
