@@ -30,7 +30,7 @@ const CONTENT: Record<
 > = {
   [PLATFORM.MAC]: {
     logo: APPLE_LOGO,
-    title: "You're almost one!",
+    title: "You're almost done!",
     install_section: {
       title: 'Install New Version',
       description: [
