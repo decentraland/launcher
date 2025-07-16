@@ -5,6 +5,10 @@ export function downloadExplorer(url: string) {
   ipcRenderer.invoke(IPC_HANDLERS.DOWNLOAD_EXPLORER, url);
 }
 
+export function downloadLauncher() {
+  ipcRenderer.invoke(IPC_HANDLERS.DOWNLOAD_LAUNCHER);
+}
+
 export function downloadState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
   return ipcRenderer.on(IPC_EVENTS.DOWNLOAD_STATE, cb);
 }
@@ -33,9 +37,4 @@ export function launchExplorer(version?: string) {
 
 export function launchState(cb: (event: IpcRendererEvent, state: IpcRendererEventData) => void) {
   return ipcRenderer.on(IPC_EVENTS.LAUNCH_EXPLORER, cb);
-}
-
-export async function getOSName(): Promise<string> {
-  const resp = await ipcRenderer.invoke(IPC_HANDLERS.GET_OS_NAME);
-  return resp;
 }

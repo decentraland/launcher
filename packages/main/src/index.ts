@@ -2,12 +2,12 @@ import { app } from 'electron';
 import updater from 'electron-updater';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
-import { Analytics, ANALYTICS_EVENT, getErrorMessage } from '#shared';
+import { Analytics, ANALYTICS_EVENT, getErrorMessage, PLATFORM } from '#shared';
 import { getUserId } from './modules/config';
 import { initIpcHandlers } from './modules/ipc';
 import { initProtocol } from './modules/protocol';
 import { restoreOrCreateWindow } from './mainWindow';
-import { getAppVersion, getOSName, PLATFORM } from './helpers';
+import { getAppVersion, getOSName } from './helpers';
 import './security-restrictions';
 
 // Initialize Sentry

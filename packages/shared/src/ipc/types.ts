@@ -1,10 +1,13 @@
 export enum IPC_HANDLERS {
   DOWNLOAD_EXPLORER = 'download-explorer',
+  DOWNLOAD_LAUNCHER = 'download-launcher',
   INSTALL_EXPLORER = 'install-explorer',
   IS_EXPLORER_INSTALLED = 'is-explorer-installed',
   IS_EXPLORER_UPDATED = 'is-explorer-updated',
   LAUNCH_EXPLORER = 'launch-explorer',
+  GET_PLATFORM = 'get-platform',
   GET_OS_NAME = 'get-os-name',
+  GET_ARCH = 'get-arch',
 }
 
 export enum IPC_EVENTS {

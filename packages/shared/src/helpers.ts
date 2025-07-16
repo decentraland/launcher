@@ -15,3 +15,10 @@ export function getErrorMessage(error: unknown): string {
 
   return errorMessage;
 }
+
+export enum PLATFORM {
+  MAC = 'macos',
+  LINUX = 'linux',
+  WINDOWS = 'windows64',
+  UNSUPPORTED = 'unsupported',
+}

@@ -1,6 +1,6 @@
 import log from 'electron-log/renderer';
 import { getBucketURL, getErrorMessage, RELEASE_PREFIX } from '#shared';
-import { getOSName } from './ipc';
+import { getOSName } from './platform';
 
 export async function fetchExplorerLatestRelease() {
   try {

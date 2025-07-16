@@ -5,6 +5,7 @@ import { app } from 'electron';
 import JSZip from 'jszip';
 import { extract, list } from 'tar';
 import semver from 'semver';
+import { PLATFORM } from '#shared';
 
 const DEFAULT_PROVIDER = 'dcl';
 
@@ -12,15 +13,12 @@ export function getAppVersion(): string {
   return app.getVersion();
 }
 
-export enum PLATFORM {
-  MAC = 'macos',
-  LINUX = 'linux',
-  WINDOWS = 'windows64',
-  UNSUPPORTED = 'unsupported',
+export function getPlatform() {
+  return process.platform;
 }
 
 export function getOSName(): PLATFORM {
-  switch (process.platform) {
+  switch (getPlatform()) {
     case 'darwin':
       return PLATFORM.MAC;
     case 'linux':
@@ -32,6 +30,10 @@ export function getOSName(): PLATFORM {
   }
 }
 
+export function getArch() {
+  return process.arch;
+}
+
 export function getAppBasePath(): string {
   const osName = getOSName();
   if (![PLATFORM.MAC, PLATFORM.WINDOWS].includes(osName)) {
@@ -41,6 +43,10 @@ export function getAppBasePath(): string {
   const applicationFolderName = 'DecentralandLauncher';
 
   return osName === PLATFORM.WINDOWS ? dirname(app.getPath('exe')) : join(app.getPath('appData'), applicationFolderName);
+}
+
+export function getDownloadsPath(): string {
+  return join(app.getPath('downloads'));
 }
 
 export function getAppIcon(): string {

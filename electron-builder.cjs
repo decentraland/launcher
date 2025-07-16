@@ -1,11 +1,13 @@
+/** @type {import('electron-builder').Configuration} */
+
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
 const config = {
-  productName: 'Decentraland Launcher',
-  artifactName: 'Decentraland Launcher-${os}-${arch}.${ext}',
-  executableName: 'Decentraland Launcher',
+  productName: 'Decentraland Outdated',
+  artifactName: 'Decentraland Outdated-${os}-${arch}.${ext}',
+  executableName: 'Decentraland Outdated',
   directories: {
     output: 'dist',
     buildResources: 'buildResources',
@@ -96,7 +98,7 @@ const config = {
     extraResources: ['icon.icns'],
   },
   dmg: {
-    title: 'Decentraland Launcher Installer',
+    title: 'Decentraland Outdated Launcher Installer',
     background: 'buildResources/background.png',
     format: 'UDZO',
     window: {
@@ -167,7 +169,7 @@ if (process.env.CODE_SIGN_SCRIPT_PATH) {
     console.log('Requested signing for ', configuration.path);
 
     // Only proceed if the installer .exe file is in the configuration path - skip signing everything else
-    if (!configuration.path.endsWith('Decentraland Launcher-win-x64.exe')) {
+    if (!configuration.path.endsWith('Decentraland Outdated-win-x64.exe')) {
       console.log('This is not the installer .exe, skip signing');
       return true;
     }

@@ -1,7 +1,8 @@
 import path from 'node:path';
 import { app } from 'electron';
 import log from 'electron-log/main';
-import { getOSName, PLATFORM } from '../helpers';
+import { PLATFORM } from '#shared';
+import { getOSName } from '../helpers';
 
 // Protocol Handler (deep link)
 const PROTOCOL = 'decentraland';
