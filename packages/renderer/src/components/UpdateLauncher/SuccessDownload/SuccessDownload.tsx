@@ -60,7 +60,7 @@ const CONTENT: Record<
   },
   [PLATFORM.WINDOWS]: {
     logo: WINDOWS_LOGO,
-    title: "You're almost one!",
+    title: "You're almost done!",
     install_section: {
       title: 'Install New Version',
       description: [
