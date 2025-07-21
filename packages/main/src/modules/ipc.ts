@@ -322,11 +322,14 @@ export async function launchExplorer(event: Electron.IpcMainInvokeEvent, version
 export async function downloadLauncher(event: Electron.IpcMainInvokeEvent) {
   const osName = getOSName();
   let url = '';
+  let filename = '';
 
   if (osName === PLATFORM.MAC) {
     url = `${LAUNCHER_BASE_URL}/Decentraland_aarch64.dmg`;
+    filename = 'Decentraland.dmg';
   } else if (osName === PLATFORM.WINDOWS) {
     url = `${LAUNCHER_BASE_URL}/Decentraland_x64-setup.exe`;
+    filename = 'Decentraland.exe';
   } else {
     log.error('[Main Window][IPC][DownloadLauncher] Unsupported OS');
     return;
@@ -341,6 +344,7 @@ export async function downloadLauncher(event: Electron.IpcMainInvokeEvent) {
     if (url) {
       const resp = await download(win, url, {
         directory: getDownloadsPath(),
+        filename: filename,
         onStarted: _item => {
           event.sender.send(IPC_EVENTS.DOWNLOAD_STATE, {
             type: IPC_EVENT_DATA_TYPE.START,
