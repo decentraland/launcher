@@ -326,10 +326,10 @@ export async function downloadLauncher(event: Electron.IpcMainInvokeEvent) {
 
   if (osName === PLATFORM.MAC) {
     url = `${LAUNCHER_BASE_URL}/Decentraland_aarch64.dmg`;
-    filename = 'Decentraland.dmg';
+    filename = 'Decentraland_installer.dmg';
   } else if (osName === PLATFORM.WINDOWS) {
     url = `${LAUNCHER_BASE_URL}/Decentraland_x64-setup.exe`;
-    filename = 'Decentraland.exe';
+    filename = 'Decentraland_installer.exe';
   } else {
     log.error('[Main Window][IPC][DownloadLauncher] Unsupported OS');
     return;
